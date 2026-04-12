@@ -250,25 +250,31 @@ const _sb = supabase.createClient(
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0ZW9uYndqam52ZXdyaXdjYm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTk1NjQsImV4cCI6MjA5MTU5NTU2NH0.3jnOBq2-CQQromGMcoLiLG73UviD8XTLmGFiah1oWZ4'
 );
 
-// 提交词汇：本地存档 + 云端 upsert（count +1）
+// 提交词汇：本地存档 + 云端 upsert（count +1）+ 更新本地缓存
 async function submitWord(word) {
     storeWord(word);
     try {
         const { data } = await _sb.from('words').select('count').eq('word', word).maybeSingle();
         if (data) {
-            await _sb.from('words').update({ count: data.count + 1, updated_at: new Date() }).eq('word', word);
+            const newCount = data.count + 1;
+            await _sb.from('words').update({ count: newCount, updated_at: new Date() }).eq('word', word);
+            wordCounts.set(word, newCount);
         } else {
             await _sb.from('words').insert({ word, count: 1 });
+            wordCounts.set(word, 1);
         }
     } catch (_) {}
 }
 
-// 构建星系词池：云端 Top 100 + 本地存档 + SEED_WORDS
+// 构建星系词池：云端 Top 100 + 本地存档 + SEED_WORDS，同步填充 wordCounts 缓存
 async function initGalaxy(targetWord) {
     let cloudWords = [];
     try {
-        const { data } = await _sb.from('words').select('word').order('count', { ascending: false }).limit(100);
-        if (data) cloudWords = data.map(r => r.word);
+        const { data } = await _sb.from('words').select('word,count').order('count', { ascending: false }).limit(100);
+        if (data) {
+            data.forEach(r => wordCounts.set(r.word, r.count));
+            cloudWords = data.map(r => r.word);
+        }
     } catch (_) {}
 
     const stored = getStoredWords();
@@ -355,11 +361,11 @@ function buildGalaxyWords(targetWord) {
     return others.sort(() => Math.random() - 0.5);
 }
 
-// 共振人数：词哈希 + UTC 天数种子 → 每天凌晨 00:00 UTC 能量重排
-function resonanceCount(word) {
-    if (!word || word.length < 2) return 72;
-    const utcDay = Math.floor(Date.now() / 864e5); // UTC 天数，全球用户同步
-    return Math.floor(60 + ((word.charCodeAt(0) * 37 + word.charCodeAt(1) * 13 + utcDay * 7) % 80));
+// 全局 DB 计数缓存：word → 真实 count（由 initGalaxy 填充，submitWord 更新）
+const wordCounts = new Map();
+
+function getWordCount(word) {
+    return wordCounts.get(word) ?? 1;
 }
 
 // 从 Supabase 拉取全球灵魂总数（SUM of count）
@@ -481,7 +487,7 @@ function renderGalaxy(words, targetWord) {
 
     // 获取当前词群中的 Top 5（Heatmap 热力标识）
     const topWords = words
-        .map(w => ({ word: w, count: resonanceCount(w) }))
+        .map(w => ({ word: w, count: getWordCount(w) }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5)
         .map(x => x.word);
@@ -627,7 +633,7 @@ function burstPlanet(x, y) {
 
 // 共振提示
 function showResonanceToast(word) {
-    const count = resonanceCount(word);
+    const count = getWordCount(word);
     resonanceToast.innerHTML =
         `<span class="toast-line">你的思念已入星海</span>` +
         `<span class="toast-count">${count}</span>` +
@@ -647,11 +653,11 @@ function getGlobalRankings() {
         .slice(0, 5)
         .map(([w]) => w);
 
-    // 系统种子词：按当日共振值降序，排除用户词
+    // 系统种子词：按 DB 真实 count 降序，排除用户词
     const userSet = new Set(userWords);
     const seedRanked = SEED_WORDS
         .filter(w => !userSet.has(w))
-        .map(w => ({ word: w, count: resonanceCount(w) }))
+        .map(w => ({ word: w, count: getWordCount(w) }))
         .sort((a, b) => b.count - a.count);
 
     // 交错合并：user → seed → user → seed ...
@@ -660,7 +666,7 @@ function getGlobalRankings() {
     while (result.length < 10 && (ui < userWords.length || si < seedRanked.length)) {
         if (ui < userWords.length) {
             const w = userWords[ui++];
-            result.push({ word: w, count: resonanceCount(w) });
+            result.push({ word: w, count: getWordCount(w) });
         }
         if (result.length < 10 && si < seedRanked.length) {
             result.push(seedRanked[si++]);
@@ -802,7 +808,7 @@ galaxyOverlay.addEventListener('mousemove', (e) => {
                 ? 'drop-shadow(0 0 12px #00ffff) brightness(1.6)'
                 : 'drop-shadow(0 0 8px #9370db) brightness(1.4)';
         }
-        const count = resonanceCount(word);
+        const count = getWordCount(word);
         planetTooltip.innerHTML =
             `<span class="tooltip-word">${word}</span>` +
             `<span class="tooltip-stats">共鸣深度：${count} 位灵魂</span>`;
