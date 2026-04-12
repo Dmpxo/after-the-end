@@ -8,6 +8,7 @@ const resetBtn = document.getElementById('reset-btn');
 let width, height;
 const stars = [];
 const particles = [];
+const ripples = []; 
 let animationId;
 
 // Configuration
@@ -125,6 +126,31 @@ class TextParticle {
     }
 }
 
+class Ripple {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.r = 0;
+        this.maxR = Math.max(width, height) * 0.8;
+        this.opacity = 0.5;
+        this.dead = false;
+    }
+
+    update() {
+        this.r += 12;
+        this.opacity -= 0.008;
+        if (this.opacity <= 0 || this.r >= this.maxR) this.dead = true;
+    }
+
+    draw() {
+        ctx.strokeStyle = `rgba(0, 255, 255, ${Math.max(0, this.opacity)})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
 function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
@@ -186,6 +212,13 @@ function update() {
         }
     }
 
+    for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        r.update();
+        r.draw();
+        if (r.dead) ripples.splice(i, 1);
+    }
+
     animationId = requestAnimationFrame(update);
 }
 
@@ -202,6 +235,9 @@ function handleSubmit(text) {
     submitWord(text);
     spawnTextParticles(text);
     inputSection.classList.add('hidden');
+
+    // 触发画布涟漪
+    ripples.push(new Ripple(width / 2, height / 2));
 
     setTimeout(() => particles.forEach(p => p.disperse()), 100);
     setTimeout(() => triggerGalaxyTransition(text), 3200);
@@ -329,7 +365,14 @@ function resonanceCount(word) {
 // 由 getGlobalRankings() 驱动，每项可点击定位
 function updateLeaderboard() {
     leaderboardList.innerHTML = '';
-    getGlobalRankings().forEach(({ word, count }, index) => {
+    const rankings = getGlobalRankings();
+    
+    // 计算全球灵魂总数 (从 0 开始计)
+    const totalSouls = Object.values(getArchive()).reduce((acc, cur) => acc + cur.count, 0);
+    const soulCountEl = document.getElementById('global-soul-count');
+    if (soulCountEl) soulCountEl.textContent = totalSouls.toLocaleString();
+
+    rankings.forEach(({ word, count }, index) => {
         const item = document.createElement('div');
         item.className = 'leaderboard-item';
         item.style.cursor = 'pointer';
@@ -842,6 +885,21 @@ function hideGalaxy() {
 }
 
 // 视角控制逻辑
+const btnShare = document.getElementById('btn-share');
+const shareOverlay = document.getElementById('share-overlay');
+const closeShare = document.getElementById('close-share');
+const shareN = document.getElementById('share-n');
+
+btnShare.addEventListener('click', () => {
+    const totalSouls = Object.values(getArchive()).reduce((acc, cur) => acc + cur.count, 0);
+    shareN.textContent = totalSouls.toLocaleString();
+    shareOverlay.classList.remove('hidden');
+});
+
+closeShare.addEventListener('click', () => {
+    shareOverlay.classList.add('hidden');
+});
+
 btnResetView.addEventListener('click', () => {
     const target = document.getElementById('target-planet');
     if (target) {

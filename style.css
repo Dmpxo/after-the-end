@@ -22,7 +22,12 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    /* 禁止移动端下拉刷新和橡皮筋效果 */
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
 }
+
 
 canvas {
     position: fixed;
@@ -146,7 +151,11 @@ input::placeholder {
     font-family: 'PingFang SC', sans-serif;
     letter-spacing: 4px;
     opacity: 0.8;
+    /* 屏蔽所有触控引起的滚动行为，交给 JS 或 CSS 动画 */
+    touch-action: none;
+    overscroll-behavior: none;
 }
+
 
 #galaxy-close {
     position: absolute;
@@ -168,6 +177,8 @@ input::placeholder {
 #galaxy-svg {
     width: min(90vw, 90vh);
     height: min(90vw, 90vh);
+    position: relative;
+    z-index: 5; /* 确保在排行榜和控件之下 */
 }
 
 .galaxy-map-overlay.active {
@@ -197,17 +208,16 @@ input::placeholder {
 }
 
 @keyframes gravitationalWave {
-    0% {
-        opacity: 0;
+    0% { 
+        opacity: 0; 
     }
-
-    20% {
-        opacity: 0.15;
-        filter: blur(2px);
+    30% { 
+        opacity: 0.08; 
+        filter: blur(4px);
     }
-
-    100% {
-        opacity: 0;
+    100% { 
+        opacity: 0; 
+        filter: blur(10px);
     }
 }
 
@@ -246,6 +256,24 @@ input::placeholder {
         filter: none;
     }
 }
+
+/* Heatmap: Top 5 星球强光动效 */
+.top-planet {
+    filter: drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px rgba(0, 255, 255, 0.4));
+    animation: topPlanetPulse 1.5s ease-in-out infinite !important;
+}
+
+@keyframes topPlanetPulse {
+    0%, 100% { 
+        transform: scale(1);
+        filter: drop-shadow(0 0 15px #00ffff) brightness(1);
+    }
+    50% { 
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 25px #00ffff) brightness(1.6);
+    }
+}
+
 
 
 @keyframes slowRotate {
@@ -430,11 +458,31 @@ input::placeholder {
     font-size: 0.9rem;
     font-weight: 300;
     color: var(--accent-color);
-    margin-bottom: 20px;
+    margin-bottom: 8px;
     letter-spacing: 2px;
     text-transform: uppercase;
     text-shadow: 0 0 10px rgba(147, 112, 219, 0.5);
 }
+
+/* 全球统计文字样式 */
+#global-stats {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 20px;
+    font-weight: 200;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+#global-soul-count {
+    color: #00ffff;
+    font-size: 1.1rem;
+    font-weight: 400;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+}
+
 
 .leaderboard-item {
     display: flex;
@@ -573,8 +621,98 @@ input::placeholder {
     }
 }
 
-/* 共振提示 Toast */
-#resonance-toast {
+/* 分享遮罩层 */
+#share-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+#share-overlay:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.share-card {
+    width: min(340px, 90vw);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 40px 30px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    transform: translateY(20px);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#share-overlay:not(.hidden) .share-card {
+    transform: translateY(0);
+}
+
+.share-header {
+    font-size: 0.8rem;
+    color: var(--accent-color);
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+    opacity: 0.7;
+}
+
+.share-content p {
+    font-size: 1.25rem;
+    line-height: 1.8;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: 2px;
+}
+
+#share-n {
+    color: #00ffff;
+    font-size: 2.2rem;
+    font-weight: 400;
+    display: block;
+    margin: 15px 0;
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.share-footer {
+    margin-top: 50px;
+}
+
+#close-share {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#close-share:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.share-hint {
+    margin-top: 20px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 1px;
+}
     position: absolute;
     bottom: 14%;
     left: 50%;
