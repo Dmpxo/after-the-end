@@ -267,6 +267,7 @@ async function submitWord(word) {
 }
 
 // 构建星系词池：云端 Top 100 + 本地存档 + SEED_WORDS，同步填充 wordCounts 缓存
+// 构建星系词池：云端 Top 100（完全去伪存真，无 Seed Words）
 async function initGalaxy(targetWord) {
     let cloudWords = [];
     try {
@@ -277,8 +278,12 @@ async function initGalaxy(targetWord) {
         }
     } catch (_) {}
 
-    const stored = getStoredWords();
-    const pool = [...new Set([...stored, ...cloudWords, ...SEED_WORDS])];
+    // 池中仅包含数据库真实存在的词汇
+    const pool = [...new Set([...cloudWords])];
+    
+    // 如果没有任何数据，返回空池
+    if (pool.length === 0) return targetWord ? [targetWord] : [];
+
     if (!targetWord) return pool.sort(() => Math.random() - 0.5).slice(0, 40);
     const others = pool.filter(w => w !== targetWord).sort(() => Math.random() - 0.5).slice(0, 39);
     others.push(targetWord);
@@ -315,14 +320,7 @@ function resetCamera() {
     applyCamera();
 }
 
-const SEED_WORDS = [
-    '平安', '自由', '爱你', '谢谢', '再见', '无悔', '归家', '珍重',
-    '快乐', '原谅', '放手', '坚持', '陪你', '勇敢', '圆满', '安好',
-    '幸福', '无憾', '感恩', '释怀', '思念', '尽力', '随缘', '知足',
-    '初心', '微笑', '温暖', '无惧', '此生', '无忧',
-];
-
-// ── SoulArchive：灵魂轨迹持久化 ──
+// ── SoulArchive：灵魂轨迹本地持久化 ──
 // 结构：{ word: { count, firstSeen, lastSeen } }
 function getArchive() {
     try { return JSON.parse(localStorage.getItem('soul_archive') || '{}'); }
@@ -368,13 +366,14 @@ function getWordCount(word) {
     return wordCounts.get(word) ?? 1;
 }
 
-// 从 Supabase 拉取全球灵魂总数（SUM of count）
+// 从 Supabase 拉取全球灵魂总行数（精确 Row Count）
 async function fetchGlobalSoulCount() {
     try {
-        const { data, error } = await _sb.from('words').select('count');
-        if (error || !data) return null;
-        return data.reduce((acc, row) => acc + (row.count || 0), 0);
-    } catch (_) { return null; }
+        // 使用 head: true, count: 'exact' 获取真实记录总条数
+        const { count, error } = await _sb.from('words').select('*', { count: 'exact', head: true });
+        if (error) return 0;
+        return count || 0;
+    } catch (_) { return 0; }
 }
 
 // 由 getGlobalRankings() 驱动，每项可点击定位
@@ -643,36 +642,13 @@ function showResonanceToast(word) {
 }
 
 // ── 排行榜 ────────────────────────────────────────────
-// 优先展示用户历史记忆，穿插系统高频词，共 10 条
+// 根据 DB 真实加载的数据进行排序，展示 Top 10 条
 function getGlobalRankings() {
-    const archive = getArchive();
-
-    // 用户词：按提交频率降序，同频按最近时间降序，取 Top 5
-    const userWords = Object.entries(archive)
-        .sort((a, b) => b[1].count - a[1].count || b[1].lastSeen - a[1].lastSeen)
-        .slice(0, 5)
-        .map(([w]) => w);
-
-    // 系统种子词：按 DB 真实 count 降序，排除用户词
-    const userSet = new Set(userWords);
-    const seedRanked = SEED_WORDS
-        .filter(w => !userSet.has(w))
-        .map(w => ({ word: w, count: getWordCount(w) }))
-        .sort((a, b) => b.count - a.count);
-
-    // 交错合并：user → seed → user → seed ...
-    const result = [];
-    let ui = 0, si = 0;
-    while (result.length < 10 && (ui < userWords.length || si < seedRanked.length)) {
-        if (ui < userWords.length) {
-            const w = userWords[ui++];
-            result.push({ word: w, count: getWordCount(w) });
-        }
-        if (result.length < 10 && si < seedRanked.length) {
-            result.push(seedRanked[si++]);
-        }
-    }
-    return result;
+    // 直接基于由 initGalaxy 或 submitWord 填充的 wordCounts Map
+    return Array.from(wordCounts.entries())
+        .map(([word, count]) => ({ word, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
 }
 
 // ── 星球定位 ──────────────────────────────────────────
