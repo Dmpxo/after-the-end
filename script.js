@@ -362,15 +362,26 @@ function resonanceCount(word) {
     return Math.floor(60 + ((word.charCodeAt(0) * 37 + word.charCodeAt(1) * 13 + utcDay * 7) % 80));
 }
 
+// 从 Supabase 拉取全球灵魂总数（SUM of count）
+async function fetchGlobalSoulCount() {
+    try {
+        const { data, error } = await _sb.from('words').select('count');
+        if (error || !data) return null;
+        return data.reduce((acc, row) => acc + (row.count || 0), 0);
+    } catch (_) { return null; }
+}
+
 // 由 getGlobalRankings() 驱动，每项可点击定位
-function updateLeaderboard() {
+async function updateLeaderboard() {
     leaderboardList.innerHTML = '';
     const rankings = getGlobalRankings();
-    
-    // 计算全球灵魂总数 (从 0 开始计)
-    const totalSouls = Object.values(getArchive()).reduce((acc, cur) => acc + cur.count, 0);
+
+    // 全球真实计数：从 Supabase SUM(count)
     const soulCountEl = document.getElementById('global-soul-count');
-    if (soulCountEl) soulCountEl.textContent = totalSouls.toLocaleString();
+    if (soulCountEl) {
+        const globalTotal = await fetchGlobalSoulCount();
+        soulCountEl.textContent = (globalTotal ?? 0).toLocaleString();
+    }
 
     rankings.forEach(({ word, count }, index) => {
         const item = document.createElement('div');
@@ -468,6 +479,14 @@ function renderGalaxy(words, targetWord) {
     const maxPerOrbit = [4, 6, 8, 10, 12];
     let wordIdx = 0;
 
+    // 获取当前词群中的 Top 5（Heatmap 热力标识）
+    const topWords = words
+        .map(w => ({ word: w, count: resonanceCount(w) }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+        .map(x => x.word);
+    const topSet = new Set(topWords);
+
     orbits.forEach((r, oi) => {
         if (wordIdx >= words.length) return;
         const count = Math.min(maxPerOrbit[oi], words.length - wordIdx);
@@ -488,11 +507,14 @@ function renderGalaxy(words, targetWord) {
             const y = Math.sin(angle) * r;
             const word = words[wordIdx++];
             const isTarget = targetWord && word === targetWord;
+            const isTop = topSet.has(word);
 
             planetPositions[word] = { x, y };
 
             const hue = isTarget ? 180 : 260 + Math.random() * 60;
-            const planetR = isTarget ? 20 : 14 + Math.random() * 5;
+            // Top 星球半径翻倍
+            let planetR = isTarget ? 20 : 14 + Math.random() * 5;
+            if (isTop && !isTarget) planetR *= 1.8;
 
             // 连线
             const line = document.createElementNS(ns, 'line');
@@ -506,7 +528,7 @@ function renderGalaxy(words, targetWord) {
             const planet = document.createElementNS(ns, 'circle');
             planet.setAttribute('cx', x); planet.setAttribute('cy', y);
             planet.setAttribute('r', planetR);
-            planet.dataset.randR = planetR - (isTarget ? 20 : 14); // 存储随机增量以还原
+            planet.dataset.randR = planetR - (isTarget ? 20 : (isTop ? 14 * 1.8 : 14));
             planet.setAttribute('fill', `hsla(${hue},60%,55%,${isTarget ? 0.3 : 0.15})`);
             planet.setAttribute('stroke', `hsla(${hue},70%,65%,${isTarget ? 0.95 : 0.7})`);
             planet.setAttribute('stroke-width', isTarget ? '1.8' : '1');
@@ -514,12 +536,12 @@ function renderGalaxy(words, targetWord) {
             planet.style.transition = 'r 0.25s ease, filter 0.25s ease';
 
             if (isTarget) planet.id = 'target-planet';
+            if (isTop) planet.classList.add('top-planet');
 
             // 注册到空间哈希（hit zone 扩大 8 单位提升易触发性）
-            planetElements[word] = { circle: planet, origR: planetR, isTarget };
+            planetElements[word] = { circle: planet, origR: planetR, isTarget, isTop };
             spatialInsert(word, x, y, planetR + 8);
 
-            galaxySvg.appendChild(planet);
 
             // 词
             const label = document.createElementNS(ns, 'text');
@@ -776,7 +798,7 @@ galaxyOverlay.addEventListener('mousemove', (e) => {
         const el = planetElements[word];
         if (el) {
             el.circle.setAttribute('r', el.origR + 6);
-            el.circle.style.filter = el.isTarget
+            el.circle.style.filter = (el.isTarget || el.isTop)
                 ? 'drop-shadow(0 0 12px #00ffff) brightness(1.6)'
                 : 'drop-shadow(0 0 8px #9370db) brightness(1.4)';
         }
@@ -890,9 +912,9 @@ const shareOverlay = document.getElementById('share-overlay');
 const closeShare = document.getElementById('close-share');
 const shareN = document.getElementById('share-n');
 
-btnShare.addEventListener('click', () => {
-    const totalSouls = Object.values(getArchive()).reduce((acc, cur) => acc + cur.count, 0);
-    shareN.textContent = totalSouls.toLocaleString();
+btnShare.addEventListener('click', async () => {
+    const globalTotal = await fetchGlobalSoulCount();
+    shareN.textContent = (globalTotal ?? 0).toLocaleString();
     shareOverlay.classList.remove('hidden');
 });
 
