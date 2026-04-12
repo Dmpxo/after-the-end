@@ -104,12 +104,14 @@ class TextParticle {
     }
 
     convertToStar() {
-        const star = new Star(true);
-        star.x = this.x;
-        star.y = this.y;
-        star.size = Math.random() * 1.2;
-        stars.push(star);
-        // Remove from particles (done in loop)
+        // 硬上限：防止多次提交后 stars 无限膨胀导致帧率下降
+        if (stars.length < STAR_COUNT * 2) {
+            const star = new Star(true);
+            star.x = this.x;
+            star.y = this.y;
+            star.size = Math.random() * 1.2;
+            stars.push(star);
+        }
         this.dead = true;
     }
 
@@ -197,12 +199,48 @@ finalWordsInput.addEventListener('keypress', (e) => {
 
 function handleSubmit(text) {
     appState = 'DISPERSING';
-    storeWord(text);
+    submitWord(text);
     spawnTextParticles(text);
     inputSection.classList.add('hidden');
 
     setTimeout(() => particles.forEach(p => p.disperse()), 100);
     setTimeout(() => triggerGalaxyTransition(text), 3200);
+}
+
+// ── Supabase ──────────────────────────────────────────
+// 所需表：CREATE TABLE words (word text primary key, count int default 1, updated_at timestamptz default now());
+const _sb = supabase.createClient(
+    'https://wteonbwjjnvewriwcbmn.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0ZW9uYndqam52ZXdyaXdjYm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMTk1NjQsImV4cCI6MjA5MTU5NTU2NH0.3jnOBq2-CQQromGMcoLiLG73UviD8XTLmGFiah1oWZ4'
+);
+
+// 提交词汇：本地存档 + 云端 upsert（count +1）
+async function submitWord(word) {
+    storeWord(word);
+    try {
+        const { data } = await _sb.from('words').select('count').eq('word', word).maybeSingle();
+        if (data) {
+            await _sb.from('words').update({ count: data.count + 1, updated_at: new Date() }).eq('word', word);
+        } else {
+            await _sb.from('words').insert({ word, count: 1 });
+        }
+    } catch (_) {}
+}
+
+// 构建星系词池：云端 Top 100 + 本地存档 + SEED_WORDS
+async function initGalaxy(targetWord) {
+    let cloudWords = [];
+    try {
+        const { data } = await _sb.from('words').select('word').order('count', { ascending: false }).limit(100);
+        if (data) cloudWords = data.map(r => r.word);
+    } catch (_) {}
+
+    const stored = getStoredWords();
+    const pool = [...new Set([...stored, ...cloudWords, ...SEED_WORDS])];
+    if (!targetWord) return pool.sort(() => Math.random() - 0.5).slice(0, 40);
+    const others = pool.filter(w => w !== targetWord).sort(() => Math.random() - 0.5).slice(0, 39);
+    others.push(targetWord);
+    return others.sort(() => Math.random() - 0.5);
 }
 
 // ── 星系图 ──────────────────────────────────────────
@@ -303,37 +341,6 @@ function updateLeaderboard() {
         item.addEventListener('click', () => focusOnStar(word));
         leaderboardList.appendChild(item);
     });
-}
-
-function handlePlanetHover(e, word, isTarget) {
-    const count = resonanceCount(word);
-    planetTooltip.innerHTML = `
-        <span class="tooltip-word">${word}</span>
-        <span class="tooltip-stats">共鸣深度：${count} 位灵魂</span>
-    `;
-    planetTooltip.classList.add('visible');
-
-    // 增加星球缩放与发光
-    const target = e.target;
-    if (target.tagName === 'circle') {
-        target.setAttribute('r', isTarget ? 30 : 25);
-        target.style.filter = 'drop-shadow(0 0 10px #00ffff) brightness(1.5)';
-    }
-}
-
-function handlePlanetLeave(e, word, isTarget) {
-    planetTooltip.classList.remove('visible');
-    const target = e.target;
-    if (target.tagName === 'circle') {
-        const origR = isTarget ? 20 : 14 + (target.dataset.randR || 0);
-        target.setAttribute('r', origR);
-        target.style.filter = '';
-    }
-}
-
-function moveTooltip(e) {
-    planetTooltip.style.left = (e.clientX + 15) + 'px';
-    planetTooltip.style.top = (e.clientY + 15) + 'px';
 }
 
 // ── 空间哈希坐标预索引（O(1) Tooltip 触发）──────────────
@@ -597,18 +604,6 @@ function getGlobalRankings() {
     return result;
 }
 
-function renderRankings() {
-    const list = document.getElementById('rankings-list');
-    list.innerHTML = '';
-    getGlobalRankings().forEach(({ word, count }) => {
-        const li = document.createElement('li');
-        li.innerHTML = `<span>${word}</span><span class="rank-count">${count}</span>`;
-        li.addEventListener('click', () => focusOnStar(word));
-        list.appendChild(li);
-    });
-    document.getElementById('rankings-panel').classList.add('visible');
-}
-
 // ── 星球定位 ──────────────────────────────────────────
 function focusOnStar(word) {
     const pos = planetPositions[word];
@@ -782,9 +777,9 @@ galaxyOverlay.addEventListener('wheel', (e) => {
 // ── 主流程 ──────────────────────────────────────────
 
 // 自动俯冲进入（提交后触发）
-function triggerGalaxyTransition(word) {
+async function triggerGalaxyTransition(word) {
     appState = 'ZOOMING';
-    const words = buildGalaxyWords(word);
+    const words = await initGalaxy(word);
     renderGalaxy(words, word);
 
     galaxyOverlay.classList.add('active');
@@ -817,10 +812,10 @@ function triggerGalaxyTransition(word) {
 }
 
 // 手动进入星系（无俯冲动画）
-function showGalaxy() {
+async function showGalaxy() {
     if (appState !== 'IDLE') return;
-    appState = 'RESONATING'; // 手动进入同样解锁探索
-    const words = buildGalaxyWords(null);
+    appState = 'RESONATING';
+    const words = await initGalaxy(null);
     renderGalaxy(words, null);
     resetCamera();
     galaxySvg.classList.remove('zoom-locked');
@@ -895,3 +890,10 @@ resize();
 initStars();
 update();
 finalWordsInput.focus();
+
+// 禁止星系层触发浏览器原生拉动回弹
+galaxyOverlay.addEventListener('touchmove', (e) => {
+    if (appState !== 'IDLE' && !e.target.closest('button') && !e.target.closest('#leaderboard')) {
+        e.preventDefault();
+    }
+}, { passive: false });

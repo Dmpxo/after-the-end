@@ -5,6 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>终点之后 - 你的遗言</title>
+    <meta name="description" content="如果明天是终点，你的两字遗言是？一个沉浸式的灵魂共鸣视觉实验。">
+    <meta name="keywords" content="遗言,星空,粒子动画,交互艺术,灵魂共鸣">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lastwords.example.com/">
+    <meta property="og:title" content="终点之后 - 你的遗言">
+    <meta property="og:description" content="入星海，寻共鸣。记录你最后的两个字。">
+    <meta property="og:image" content="cover.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="终点之后 - 你的遗言">
+    <meta property="twitter:description" content="一个沉浸式的灵魂共鸣视觉实验。">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -31,6 +47,9 @@
     </div>
 
     <div class="galaxy-map-overlay" id="galaxy-overlay">
+        <!-- SVG 底层排布 -->
+        <svg id="galaxy-svg" viewBox="-400 -400 800 800" xmlns="http://www.w3.org/2000/svg"></svg>
+
         <div id="galaxy-close">× 返回</div>
         
         <!-- 侧边排行榜 -->
@@ -48,9 +67,9 @@
         <!-- 星球悬停提示 -->
         <div id="planet-tooltip"></div>
 
-        <svg id="galaxy-svg" viewBox="-400 -400 800 800" xmlns="http://www.w3.org/2000/svg"></svg>
         <div id="resonance-toast"></div>
     </div>
+
 
     <!-- 视觉滤镜资源 -->
     <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true" focusable="false">
@@ -68,6 +87,7 @@
     </svg>
 
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
 
