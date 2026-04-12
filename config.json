@@ -1,0 +1,26 @@
+{
+  "api_keys": {
+    "openai": "",
+    "gemini": "",
+    "siliconflow": "sk-hvbdaowuhzfxkcoxwpifthtwfihifdvaobqafavesoyqkgnh"
+  },
+  "proxy": {
+    "http": "",
+    "https": "",
+    "enabled": false
+  },
+  "default_analysis_type": "全部",
+  "max_keyframes": 20,
+  "keyframe_interval_sec": 30,
+  "segment_duration_min": 5,
+  "whisper": {
+    "use_api": true,
+    "model": "whisper-1",
+    "language": "zh"
+  },
+  "ai_provider": "siliconflow",
+  "gemini_model": "gemini-1.5-pro",
+  "openai_model": "gpt-4o",
+  "siliconflow_model": "Qwen/Qwen2.5-VL-72B-Instruct",
+  "siliconflow_base_url": "https://api.siliconflow.cn/v1"
+}

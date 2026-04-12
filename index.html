@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终点之后 - 你的遗言</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="shooting-stars-container">
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+    </div>
+
+    <div id="container">
+        <div id="input-section">
+            <h1 id="prompt">如果明天是终点，你的两字遗言是？</h1>
+            <input type="text" id="final-words" maxlength="2" autocomplete="off" placeholder="...">
+        </div>
+
+        <div id="result-section" class="hidden">
+            <button id="reset-btn">查看众生共鸣</button>
+        </div>
+    </div>
+
+    <div class="galaxy-map-overlay" id="galaxy-overlay">
+        <div id="galaxy-close">× 返回</div>
+        
+        <!-- 侧边排行榜 -->
+        <div id="leaderboard">
+            <h2>众生共鸣榜</h2>
+            <div id="leaderboard-list"></div>
+        </div>
+
+        <!-- 交互控件组 -->
+        <div id="controls-group">
+            <button id="btn-reset-view" title="回归中心">⌖</button>
+            <button id="btn-panorama" title="众生全景">🌐</button>
+        </div>
+
+        <!-- 星球悬停提示 -->
+        <div id="planet-tooltip"></div>
+
+        <svg id="galaxy-svg" viewBox="-400 -400 800 800" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div id="resonance-toast"></div>
+    </div>
+
+    <!-- 视觉滤镜资源 -->
+    <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true" focusable="false">
+        <defs>
+            <filter id="chromatic-aberration">
+                <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="red" />
+                <feOffset in="red" dx="1.5" dy="0" result="red-offset" />
+                <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="green" />
+                <feOffset in="green" dx="-0.8" dy="0" result="green-offset" />
+                <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="blue" />
+                <feBlend in="red-offset" in2="green-offset" mode="screen" result="rg" />
+                <feBlend in="rg" in2="blue" mode="screen" />
+            </filter>
+        </defs>
+    </svg>
+
+
+    <script src="script.js"></script>
+</body>
+
+</html>
