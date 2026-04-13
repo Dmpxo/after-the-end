@@ -151,17 +151,19 @@ class Ripple {
     }
 }
 
-// ── 音频引擎 ──
+// ── 爆款级治愈音频引擎 ──
 class ResonanceAudio {
     constructor() {
         this.ctx = null;
-        this.suspended = true;
         this.isMuted = true;
-        this.ambientOscs = [];
+        this.ambientNodes = [];
         this.masterGain = null;
+        this.lfo = null;
         
-        // 利底亚五声音阶 (Hz)
-        this.scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+        // F 利底亚 (F Lydian) 调式 - 充满希望与奇迹的光之调式
+        // F3, G3, A3, B3(H), C4, D4, E4, F4...
+        this.scale = [174.61, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25, 659.25, 783.99, 1046.50];
+        this.maj7Chord = [174.61, 220.00, 261.63, 329.63]; // F-maj7 (F, A, C, E)
     }
 
     init() {
@@ -170,6 +172,14 @@ class ResonanceAudio {
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = 0;
         this.masterGain.connect(this.ctx.destination);
+        
+        // 增加环绕立体声混响效果 (模拟)
+        this.convolver = this.ctx.createConvolver();
+        // 此处略过真实脉冲响应加载，改用低通滤波器模拟空间感
+        this.lpFilter = this.ctx.createBiquadFilter();
+        this.lpFilter.type = 'lowpass';
+        this.lpFilter.frequency.value = 2200;
+        this.lpFilter.connect(this.masterGain);
     }
 
     async unlock() {
@@ -181,74 +191,107 @@ class ResonanceAudio {
 
     toggleMute(forceState) {
         this.isMuted = (forceState !== undefined) ? forceState : !this.isMuted;
-        const target = this.isMuted ? 0 : 0.6;
+        const target = this.isMuted ? 0 : 0.45; // 稍微降低整体音量确保不压抑
         if (this.masterGain) {
-            this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.1);
+            this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.2);
         }
-        
-        // 同步 UI 图标
         const icon = document.getElementById('audio-icon');
         if (icon) icon.textContent = this.isMuted ? '🔇' : '🔊';
-        
         return this.isMuted;
     }
 
-    // 空灵背景音 (低频呼吸)
+    // “星光呼吸”环境音 (F Lydian 和弦底噪)
     startAmbient() {
-        if (!this.ctx || this.ambientOscs.length > 0) return;
+        if (!this.ctx || this.ambientNodes.length > 0) return;
         
         const createDrone = (freq, vol) => {
             const osc = this.ctx.createOscillator();
             const g = this.ctx.createGain();
             osc.type = 'sine';
             osc.frequency.value = freq;
-            g.gain.value = vol;
+            g.gain.value = 0;
             osc.connect(g);
-            g.connect(this.masterGain);
+            g.connect(this.lpFilter);
             osc.start();
-            return { osc, g };
+            g.gain.linearRampToValueAtTime(vol, this.ctx.currentTime + 3);
+            return { osc, g, baseVol: vol };
         };
 
-        this.ambientOscs.push(createDrone(65.41, 0.1)); // C2
-        this.ambientOscs.push(createDrone(98.00, 0.05)); // G2
+        const nodes = [
+            createDrone(174.61, 0.12), // F3
+            createDrone(261.63, 0.08), // C4
+            createDrone(329.63, 0.05), // E4
+        ];
+        this.ambientNodes = nodes;
+
+        // 引入 LFO 呼吸
+        this.lfo = this.ctx.createOscillator();
+        this.lfo.frequency.value = 0.08; // 12秒一个周期
+        const lfoGain = this.ctx.createGain();
+        lfoGain.gain.value = 0.03; 
+        this.lfo.connect(lfoGain);
+        
+        nodes.forEach(n => {
+            lfoGain.connect(n.g.gain);
+        });
+        this.lfo.start();
     }
 
-    // 水晶敲击声 (星点共鸣)
+    // 治愈系水晶共鸣 (带高频谐波)
     playPing(rank = 10) {
         if (!this.ctx || this.isMuted) return;
         
-        const osc = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
+        // 核心音
+        const freqIdx = Math.max(0, Math.min(this.scale.length - 1, 10 - Math.floor(rank * 1.2)));
+        const baseFreq = this.scale[freqIdx];
         
-        // 排名越高，音调越高
-        const freqIdx = Math.max(0, Math.min(this.scale.length - 1, 9 - Math.floor(rank / 2)));
-        osc.frequency.value = this.scale[freqIdx];
-        osc.type = 'sine';
-
-        g.gain.setValueAtTime(0, this.ctx.currentTime);
-        g.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.5);
-
-        osc.connect(g);
-        g.connect(this.masterGain);
+        this.createCrystalTone(baseFreq, 0.25, 1.8);
         
-        osc.start();
-        osc.stop(this.ctx.currentTime + 1.6);
+        // 手机震动反馈
+        if (navigator.vibrate) navigator.vibrate(12);
     }
 
-    // 提交时的能量绽放音
-    playBloom() {
-        if (!this.ctx || this.isMuted) return;
+    createCrystalTone(freq, vol, duration) {
+        const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const g = this.ctx.createGain();
-        osc.frequency.setValueAtTime(110, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 1);
-        g.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 2);
+        
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        
+        // 增加一个超高频闪烁泛音 (Shimmer)
+        const shimmer = this.ctx.createOscillator();
+        const shimGain = this.ctx.createGain();
+        shimmer.frequency.value = freq * 4.02; // 微弱失谐更有真实感
+        shimmer.type = 'sine';
+        shimGain.gain.setValueAtTime(0, now);
+        shimGain.gain.linearRampToValueAtTime(vol * 0.3, now + 0.01);
+        shimGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.8);
+
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(vol, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
         osc.connect(g);
-        g.connect(this.masterGain);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 2);
+        g.connect(this.lpFilter);
+        shimmer.connect(shimGain);
+        shimGain.connect(this.lpFilter);
+        
+        osc.start(now);
+        shimmer.start(now);
+        osc.stop(now + duration);
+        shimmer.stop(now + duration);
+    }
+
+    // “能量绽放” - 宏大的和弦入场
+    playBloom() {
+        if (!this.ctx || this.isMuted) return;
+        this.maj7Chord.forEach((f, i) => {
+            setTimeout(() => {
+                this.createCrystalTone(f * 2, 0.15, 2.5);
+            }, i * 150);
+        });
+        if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
     }
 }
 
