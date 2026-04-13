@@ -179,12 +179,17 @@ class ResonanceAudio {
         }
     }
 
-    toggleMute() {
-        this.isMuted = !this.isMuted;
+    toggleMute(forceState) {
+        this.isMuted = (forceState !== undefined) ? forceState : !this.isMuted;
         const target = this.isMuted ? 0 : 0.6;
         if (this.masterGain) {
             this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.1);
         }
+        
+        // 同步 UI 图标
+        const icon = document.getElementById('audio-icon');
+        if (icon) icon.textContent = this.isMuted ? '🔇' : '🔊';
+        
         return this.isMuted;
     }
 
@@ -334,9 +339,11 @@ function handleSubmit(text) {
     spawnTextParticles(text);
     inputSection.classList.add('hidden');
     
-    // 激活音频
-    audio.unlock();
-    audio.playBloom();
+    // 激活并开启音频
+    audio.unlock().then(() => {
+        audio.toggleMute(false); // 强制开启声音
+        audio.playBloom();
+    });
 
     // 触发画布涟漪
     ripples.push(new Ripple(width / 2, height / 2));
@@ -998,6 +1005,13 @@ async function triggerGalaxyTransition(word) {
 async function showGalaxy() {
     if (appState !== 'IDLE') return;
     appState = 'RESONATING';
+    
+    // 激活并开启音频
+    audio.unlock().then(() => {
+        audio.toggleMute(false);
+        audio.startAmbient();
+    });
+
     const words = await initGalaxy(null);
     renderGalaxy(words, null);
     resetCamera();
