@@ -191,12 +191,17 @@ class ResonanceAudio {
 
     toggleMute(forceState) {
         this.isMuted = (forceState !== undefined) ? forceState : !this.isMuted;
-        const target = this.isMuted ? 0 : 0.45; // 稍微降低整体音量确保不压抑
-        if (this.masterGain) {
-            this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.2);
+        const target = this.isMuted ? 0 : 0.45;
+        if (this.masterGain && this.ctx) {
+            // 先清除之前的渐变，防止冲突
+            this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+            this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.1);
         }
+        
+        // 同步 UI 图标
         const icon = document.getElementById('audio-icon');
         if (icon) icon.textContent = this.isMuted ? '🔇' : '🔊';
+        
         return this.isMuted;
     }
 
