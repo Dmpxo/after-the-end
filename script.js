@@ -151,6 +151,104 @@ class Ripple {
     }
 }
 
+// ── 音频引擎 ──
+class ResonanceAudio {
+    constructor() {
+        this.ctx = null;
+        this.suspended = true;
+        this.isMuted = true;
+        this.ambientOscs = [];
+        this.masterGain = null;
+        
+        // 利底亚五声音阶 (Hz)
+        this.scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+    }
+
+    init() {
+        if (this.ctx) return;
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0;
+        this.masterGain.connect(this.ctx.destination);
+    }
+
+    async unlock() {
+        this.init();
+        if (this.ctx.state === 'suspended') {
+            await this.ctx.resume();
+        }
+    }
+
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        const target = this.isMuted ? 0 : 0.6;
+        if (this.masterGain) {
+            this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.1);
+        }
+        return this.isMuted;
+    }
+
+    // 空灵背景音 (低频呼吸)
+    startAmbient() {
+        if (!this.ctx || this.ambientOscs.length > 0) return;
+        
+        const createDrone = (freq, vol) => {
+            const osc = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            g.gain.value = vol;
+            osc.connect(g);
+            g.connect(this.masterGain);
+            osc.start();
+            return { osc, g };
+        };
+
+        this.ambientOscs.push(createDrone(65.41, 0.1)); // C2
+        this.ambientOscs.push(createDrone(98.00, 0.05)); // G2
+    }
+
+    // 水晶敲击声 (星点共鸣)
+    playPing(rank = 10) {
+        if (!this.ctx || this.isMuted) return;
+        
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        
+        // 排名越高，音调越高
+        const freqIdx = Math.max(0, Math.min(this.scale.length - 1, 9 - Math.floor(rank / 2)));
+        osc.frequency.value = this.scale[freqIdx];
+        osc.type = 'sine';
+
+        g.gain.setValueAtTime(0, this.ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.5);
+
+        osc.connect(g);
+        g.connect(this.masterGain);
+        
+        osc.start();
+        osc.stop(this.ctx.currentTime + 1.6);
+    }
+
+    // 提交时的能量绽放音
+    playBloom() {
+        if (!this.ctx || this.isMuted) return;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 1);
+        g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 2);
+        osc.connect(g);
+        g.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 2);
+    }
+}
+
+const audio = new ResonanceAudio();
+
 function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
@@ -235,6 +333,10 @@ function handleSubmit(text) {
     submitWord(text);
     spawnTextParticles(text);
     inputSection.classList.add('hidden');
+    
+    // 激活音频
+    audio.unlock();
+    audio.playBloom();
 
     // 触发画布涟漪
     ripples.push(new Ripple(width / 2, height / 2));
@@ -716,12 +818,21 @@ galaxyOverlay.addEventListener('mousedown', (e) => {
     if (e.target.closest('#rankings-panel, #leaderboard, #controls-group, #galaxy-close, #resonance-toast')) return;
     if (springRafId) { cancelAnimationFrame(springRafId); springRafId = null; }
     isDragging = true;
+    isClick = true; // 记录是否为点击
     dragLast = { x: e.clientX, y: e.clientY };
     galaxyOverlay.classList.add('dragging');
 });
 
+let isClick = false;
+
 window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
+    
+    // 如果移动距离超过阈值，则判定为拖拽而非点击
+    if (Math.abs(e.clientX - dragLast.x) > 5 || Math.abs(e.clientY - dragLast.y) > 5) {
+        isClick = false;
+    }
+
     const rect = galaxySvg.getBoundingClientRect();
     let dx = (e.clientX - dragLast.x) * camera.w / rect.width;
     let dy = (e.clientY - dragLast.y) * camera.h / rect.height;
@@ -738,9 +849,23 @@ window.addEventListener('mousemove', (e) => {
     applyCamera();
 });
 
-window.addEventListener('mouseup', () => {
+window.addEventListener('mouseup', (e) => {
     if (!isDragging) return;
+    
+    // 激活音频系统
+    audio.unlock();
+
+    if (isClick) {
+        // 处理点击星球逻辑
+        const coords = screenToSVG(e.clientX, e.clientY);
+        const word = spatialQuery(coords.x, coords.y);
+        if (word) {
+            focusOnStar(word);
+        }
+    }
+
     isDragging = false;
+    isClick = false;
     galaxyOverlay.classList.remove('dragging');
     springBackCamera();
 });
@@ -847,10 +972,21 @@ async function triggerGalaxyTransition(word) {
                     galaxyClose.style.pointerEvents = 'auto';
 
                     galaxyOverlay.classList.add('explorable');
-                    // 侧边栏延迟滑入（总计约提交后 6.5s-7s）
+                    
+                    // 侧边栏及音效处理
+                    audio.startAmbient();
                     setTimeout(() => {
                         leaderboard.classList.add('show');
                         updateLeaderboard();
+                        
+                        // 手机端自动收起逻辑：显示 2.5s 后折叠
+                        if (window.innerWidth <= 768) {
+                            setTimeout(() => {
+                                if (appState === 'RESONATING') {
+                                    leaderboard.classList.add('collapsed');
+                                }
+                            }, 2500);
+                        }
                     }, 800);
                 }, 900);
             }, 500);
@@ -903,6 +1039,32 @@ btnShare.addEventListener('click', async () => {
 closeShare.addEventListener('click', () => {
     shareOverlay.classList.add('hidden');
 });
+
+// 排行榜抽屉及音频控制逻辑
+const leaderboardHandle = document.getElementById('leaderboard-handle');
+leaderboardHandle.addEventListener('click', () => {
+    leaderboard.classList.toggle('collapsed');
+    audio.playPing(10); // 交互音
+});
+
+const audioControl = document.getElementById('audio-control');
+const audioIcon = document.getElementById('audio-icon');
+audioControl.addEventListener('click', () => {
+    audio.unlock();
+    const isMuted = audio.toggleMute();
+    audioIcon.textContent = isMuted ? '🔇' : '🔊';
+});
+
+// 重载 focusOnStar 以包含音效
+const originalFocusOnStar = focusOnStar;
+focusOnStar = (word) => {
+    originalFocusOnStar(word);
+    
+    // 获取排名并触发音效
+    const rankings = getGlobalRankings();
+    const rank = rankings.findIndex(r => r.word === word);
+    audio.playPing(rank === -1 ? 15 : rank);
+};
 
 btnResetView.addEventListener('click', () => {
     const target = document.getElementById('target-planet');

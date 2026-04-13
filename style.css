@@ -28,6 +28,35 @@ body {
     width: 100%;
 }
 
+/* 音频切换按钮 */
+#audio-control {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    z-index: 2000;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#audio-control:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(0, 255, 255, 0.4);
+}
+
+#audio-icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5));
+}
+
 
 canvas {
     position: fixed;
@@ -449,6 +478,12 @@ input::placeholder {
     transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 150;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+}
+
+#leaderboard-handle {
+    display: none; /* Desktop hidden */
 }
 
 #leaderboard.show {
@@ -602,25 +637,57 @@ input::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
 
-/* 响应式调整 */
+/* 响应式调整：底部抽屉 */
 @media (max-width: 768px) {
     #leaderboard {
-        width: calc(100% - 40px);
-        right: 20px;
-        left: 20px;
-        top: auto;
-        bottom: 20px;
-        transform: translateY(100%);
+        width: 100% !important;
+        right: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        transform: translateY(100%) !important;
+        border-radius: 20px 20px 0 0;
+        padding: 20px;
+        max-height: 48vh;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        pointer-events: auto !important;
     }
 
     #leaderboard.show {
-        transform: translateY(0);
+        transform: translateY(0) !important;
     }
 
+    #leaderboard.collapsed {
+        transform: translateY(calc(100% - 60px)) !important;
+        cursor: pointer;
+    }
+
+    #leaderboard-list {
+        overflow-y: auto;
+        flex: 1;
+        padding-right: 5px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #leaderboard-handle {
+        display: block;
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        margin: 0 auto 15px;
+        cursor: pointer;
+    }
+
+    /* 侧边栏按钮组移到左侧并避开音频控制 */
     #controls-group {
-        left: 20px;
-        bottom: auto;
-        top: 24px;
+        left: 20px !important;
+        bottom: auto !important;
+        top: 80px !important;
+        flex-direction: column;
+        gap: 12px;
     }
 }
 
