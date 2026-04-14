@@ -1257,12 +1257,18 @@ input::placeholder {
     color: rgba(0, 255, 255, 0.6);
 }
 
-/* 图片预览体 */
+/* 图片预览体：可滚动，确保移动端所有按钮可见 */
 .poster-preview-body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
+    width: 100%;
+    max-height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 24px 20px 40px;
+    box-sizing: border-box;
     transform: translateY(16px);
     transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1273,26 +1279,11 @@ input::placeholder {
 
 .poster-preview-body.hidden { display: none; }
 
-.poster-preview-hint {
-    font-size: 0.82rem;
-    letter-spacing: 3px;
-    color: rgba(0, 255, 255, 0.8);
-    animation: previewHintPulse 2.4s infinite ease-in-out;
-}
-
-@keyframes previewHintPulse {
-    0%, 100% { opacity: 0.7; }
-    50% {
-        opacity: 1;
-        text-shadow: 0 0 12px rgba(0, 255, 255, 0.55);
-    }
-}
-
 #poster-preview-img {
-    /* 最大不超过屏幕高度的 70%，保持 9:16 */
-    max-height: 70vh;
+    /* 移动端限高 50vh，确保按钮不被推出屏幕 */
+    max-height: 50vh;
     width: auto;
-    max-width: min(calc(70vh * 9 / 16), 90vw);
+    max-width: min(calc(50vh * 9 / 16), 88vw);
     border-radius: 14px;
     display: block;
     box-shadow:
@@ -1316,6 +1307,37 @@ input::placeholder {
 #poster-preview-close:hover {
     border-color: rgba(255, 255, 255, 0.35);
     color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── 海报预览：操作区 ──────────────────────────────── */
+.poster-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 280px;
+}
+
+.btn-save-primary {
+    width: 100%;
+    padding: 14px;
+    background: rgba(0, 255, 255, 0.12);
+    border: 1px solid rgba(0, 255, 255, 0.5);
+    border-radius: 28px;
+    color: #00ffff;
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    cursor: pointer;
+    font-family: 'PingFang SC', sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 18px rgba(0, 255, 255, 0.15);
+}
+
+.btn-save-primary:active {
+    transform: scale(0.97);
+    background: rgba(0, 255, 255, 0.2);
 }
 
 /* ── 海报模板 CTA + 域名水印 ────────────────────────── */
@@ -1365,9 +1387,8 @@ input::placeholder {
 .quick-share-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    width: min(280px, 85vw);
-    margin: 12px auto 20px;
+    gap: 10px;
+    width: 100%;
 }
 
 .quick-share-group button {

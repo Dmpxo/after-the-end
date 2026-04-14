@@ -1570,11 +1570,13 @@ async function generateSharePoster(word, echoCount = 1) {
     document.body.style.overflow = 'hidden';
 
     try {
-        // 4. 截图：pixelRatio:2 → 540×960 DOM → 1080×1920 PNG
+        // 4. 截图：移动端降为 1.5x 防内存溢出，桌面保持 2x
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const dataUrl = await htmlToImage.toPng(tpl, {
-            pixelRatio: 2,
+            pixelRatio: isMobile ? 1.5 : 2,
             backgroundColor: '#050505',
-            style: { opacity: 1 }
+            style: { opacity: 1 },
+            skipFonts: false,
         });
 
         // 5. 写入图片，切换到预览状态
@@ -1583,9 +1585,14 @@ async function generateSharePoster(word, echoCount = 1) {
         previewBody.classList.remove('hidden');
     } catch (err) {
         console.warn('[Poster] capture failed:', err);
-        preview.classList.add('hidden');
-        loading.classList.add('hidden');
-        _canvasRestore();
+        // 用户可见的失败提示，而非静默消失
+        loading.querySelector('.poster-loading-text').textContent = '生成失败，请截图保存 🙏';
+        setTimeout(() => {
+            preview.classList.add('hidden');
+            loading.classList.add('hidden');
+            loading.querySelector('.poster-loading-text').textContent = '正在生成星际档案…';
+            _canvasRestore();
+        }, 2000);
     } finally {
         _posterGenerating = false;
     }
@@ -1596,6 +1603,49 @@ document.getElementById('poster-preview-close').addEventListener('click', () => 
     document.getElementById('poster-preview').classList.add('hidden');
     document.body.style.overflow = '';
     _canvasRestore();
+});
+
+/**
+ * savePosterImage(dataUrl)
+ * 优先级：Web Share API（带文件，iOS 15+/Android Chrome 可直接存相册）
+ *        → 创建 blob 下载链接（桌面 / Android 浏览器）
+ */
+async function savePosterImage(dataUrl) {
+    try {
+        const res  = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], '星际档案.png', { type: 'image/png' });
+
+        if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file], title: '终点之后 · 星际档案' });
+            return;
+        }
+    } catch (err) {
+        if (err.name === 'AbortError') return; // 用户取消
+        console.warn('[savePoster] share API failed, falling back:', err);
+    }
+
+    // Fallback：blob URL + download（桌面及不支持 share 文件的设备）
+    try {
+        const res  = await fetch(dataUrl);
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = '星际档案.png';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+    } catch (err) {
+        console.warn('[savePoster] download fallback failed:', err);
+        showStarNotify('请截图保存图片');
+    }
+}
+
+document.getElementById('btn-save-poster').addEventListener('click', () => {
+    const img = document.getElementById('poster-preview-img');
+    if (img?.src) savePosterImage(img.src);
 });
 
 // ── btn-archive：解锁 + 触发 ────────────────────────────
@@ -1740,12 +1790,20 @@ async function shareToSocial(platform) {
         document.body.removeChild(ta);
     }
 
-    // 跳转目标 App（复制后再跳，给剪贴板写入时间）
+    // 跳转目标 App：隐藏 iframe 触发 scheme，不导致当前页面导航/卡死
     const schemes = { xhs: 'xhsdiscover://', wechat: 'weixin://dl/moments' };
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile && schemes[platform]) {
-        showStarNotify(copied ? '文案已复制 · 正在跳转…' : '正在跳转…');
-        setTimeout(() => { window.location.href = schemes[platform]; }, 400);
+        showStarNotify(copied ? '文案已复制 · 正在唤起 App…' : '正在唤起 App…');
+        setTimeout(() => {
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:fixed;width:0;height:0;opacity:0;pointer-events:none';
+            iframe.src = schemes[platform];
+            document.body.appendChild(iframe);
+            setTimeout(() => {
+                if (document.body.contains(iframe)) document.body.removeChild(iframe);
+            }, 2000);
+        }, 300);
     } else {
         showStarNotify(copied ? '文案已复制到剪贴板' : '复制失败，请手动复制');
     }
