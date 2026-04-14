@@ -88,6 +88,10 @@ canvas {
     top: 0;
     left: 0;
     z-index: 1;
+    transform-origin: center center;
+    /* 海报出现时的景深收缩过渡 */
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                filter 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #container {
@@ -118,10 +122,113 @@ canvas {
     outline: none;
     transition: all 0.5s ease;
     animation: breathing 4s infinite ease-in-out;
+    text-transform: uppercase;
 }
 
 #final-words:focus {
     border-bottom-color: var(--accent-color);
+}
+
+/* 输入字数不足时的抖动反馈 */
+@keyframes inputShake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-8px); }
+    40%       { transform: translateX(8px); }
+    60%       { transform: translateX(-5px); }
+    80%       { transform: translateX(5px); }
+}
+.input-shake {
+    animation: inputShake 0.4s ease !important;
+    border-bottom-color: rgba(255, 200, 60, 0.7) !important;
+}
+
+/* 粒子消散期过渡提示 */
+#transition-hint {
+    position: fixed;
+    bottom: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: rgba(0, 255, 255, 0.55);
+    text-align: center;
+    pointer-events: none;
+    white-space: nowrap;
+    animation: transitionHintFade 2.8s ease forwards;
+}
+
+@keyframes transitionHintFade {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+    20%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* 首屏社会证明 */
+#live-stats {
+    margin-top: 1.4rem;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.25);
+    opacity: 0;
+    animation: fadeIn 3s ease-out 1.5s forwards;
+    pointer-events: none;
+}
+#live-count {
+    color: rgba(0, 255, 255, 0.55);
+    font-size: 0.9rem;
+}
+
+/* 回访用户档案提示 */
+#archive-hint {
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    color: rgba(147, 112, 219, 0.6);
+    margin-bottom: 1.6rem;
+    padding: 8px 18px;
+    border: 1px solid rgba(147, 112, 219, 0.15);
+    border-radius: 20px;
+    background: rgba(147, 112, 219, 0.05);
+    backdrop-filter: blur(8px);
+    animation: fadeIn 1.5s ease-out;
+    line-height: 1.7;
+}
+#archive-hint strong {
+    color: rgba(0, 255, 255, 0.75);
+    font-weight: 400;
+    letter-spacing: 2px;
+}
+#archive-echo-count {
+    color: rgba(0, 255, 255, 0.75);
+}
+
+/* 右上角实时流星通知 */
+#star-notify {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 1500;
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    color: rgba(0, 255, 255, 0.7);
+    padding: 6px 14px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(0, 255, 255, 0.15);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#star-notify.show {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 #result-section {
@@ -213,8 +320,8 @@ input::placeholder {
 
 #galaxy-close {
     position: absolute;
-    top: 24px;
-    right: 32px;
+    top: 16px;
+    right: 20px;
     font-size: 1rem;
     color: rgba(147, 112, 219, 0.6);
     cursor: pointer;
@@ -222,6 +329,13 @@ input::placeholder {
     transition: color 0.3s ease;
     text-shadow: none;
     z-index: 110;
+    /* 移动端触控区域 ≥ 44px */
+    padding: 14px 18px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #galaxy-close:hover {
@@ -343,26 +457,15 @@ input::placeholder {
     }
 }
 
-/* 2. 单词圆圈的模糊呼吸动画 */
+/* 2. 星球呼吸动画：仅 opacity，避免 scale/blur 触发大量 reflow */
 .galaxy-map-overlay circle,
 .galaxy-map-overlay text {
-    animation: blurBreathe 4s ease-in-out infinite;
+    animation: starBreathe 4s ease-in-out infinite;
 }
 
-@keyframes blurBreathe {
-
-    0%,
-    100% {
-        filter: blur(0px);
-        opacity: 0.7;
-        transform: scale(1);
-    }
-
-    50% {
-        filter: blur(1.5px);
-        opacity: 1;
-        transform: scale(1.05);
-    }
+@keyframes starBreathe {
+    0%, 100% { opacity: 0.7; }
+    50%       { opacity: 1; }
 }
 
 /* 排行榜面板 */
@@ -662,6 +765,57 @@ input::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
 
+.tooltip-date {
+    font-size: 0.72rem;
+    color: rgba(147, 112, 219, 0.6);
+    letter-spacing: 1px;
+}
+
+.tooltip-new {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    color: #0ff;
+    border: 1px solid rgba(0, 255, 255, 0.5);
+    border-radius: 4px;
+    padding: 1px 4px;
+    vertical-align: middle;
+    line-height: 1.4;
+}
+
+/* 排行榜新词徽章 */
+.badge-new {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    color: #0ff;
+    border: 1px solid rgba(0, 255, 255, 0.45);
+    border-radius: 4px;
+    padding: 1px 5px;
+    vertical-align: middle;
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { opacity: 0.6; }
+    50%       { opacity: 1; box-shadow: 0 0 6px rgba(0, 255, 255, 0.4); }
+}
+
+/* 今日新词星球：绿青色闪烁 */
+.new-planet {
+    filter: drop-shadow(0 0 6px rgba(80, 255, 180, 0.7));
+    animation: newPlanetPulse 3s ease-in-out infinite !important;
+    transform-origin: center;
+    transform-box: fill-box;
+}
+
+@keyframes newPlanetPulse {
+    0%, 100% { filter: drop-shadow(0 0 4px rgba(80, 255, 180, 0.5)); }
+    50%       { filter: drop-shadow(0 0 12px rgba(80, 255, 180, 0.9)); }
+}
+
 /* 响应式调整：底部抽屉 */
 @media (max-width: 768px) {
     #leaderboard {
@@ -812,6 +966,8 @@ input::placeholder {
     color: rgba(255, 255, 255, 0.3);
     letter-spacing: 1px;
 }
+
+#resonance-toast {
     position: absolute;
     bottom: 14%;
     left: 50%;
@@ -895,4 +1051,412 @@ input::placeholder {
     left: 85%;
     animation-delay: 11s;
     animation-duration: 8s;
+}
+
+/* ════════════════════════════════════════════════════
+   海报模板 — 脱离文档流，仅用于 html-to-image 截图
+   尺寸：540×960（pixelRatio:2 → 输出 1080×1920）
+   ════════════════════════════════════════════════════ */
+#poster-tpl {
+    /* 脱离用户视线，截图时通过 style:{opacity:1} 覆盖 */
+    position: fixed;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
+    /* 固定 9:16 尺寸 */
+    width: 540px;
+    height: 960px;
+    /* 纯黑背景 */
+    background: #050505;
+    /* 布局 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 64px 48px 56px;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* 防止 iOS 字体偏移 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 海报噪点叠加层 */
+#poster-tpl::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: url(#film-grain);
+    opacity: 0.15; /* 细腻的颗粒感 */
+    pointer-events: none;
+    mix-blend-mode: screen;
+    z-index: 10;
+}
+
+/* 模板内统一排版规范 */
+#poster-tpl,
+#poster-tpl * {
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+}
+
+.ptpl-header {
+    font-size: 13px;
+    letter-spacing: 5px;
+    color: rgba(0, 255, 255, 0.45);
+    text-align: center;
+    font-weight: 300;
+}
+
+.ptpl-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(0, 255, 255, 0.3), transparent);
+}
+
+.ptpl-divider--bottom {
+    background: linear-gradient(to right, transparent, rgba(147, 112, 219, 0.25), transparent);
+}
+
+.ptpl-coords {
+    font-family: 'Courier New', 'Courier', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(147, 112, 219, 0.65);
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* 遗言核心发光体 */
+.ptpl-word-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ptpl-word {
+    font-size: 160px;
+    font-weight: 900;
+    letter-spacing: 20px;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1;
+    /* 创建独立合成层，防止 iOS 把 text-shadow 和文字分两步渲染造成偏移 */
+    isolation: isolate;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+    /* Neon Glow：iOS Safari 不支持超过 ~40px 的 blur，
+       降低最外层 blur 值以保证各端视觉一致 */
+    text-shadow:
+        0 0  6px rgba(0, 255, 255, 1),
+        0 0 16px rgba(0, 255, 255, 0.9),
+        0 0 32px rgba(0, 255, 255, 0.65),
+        0 0 60px rgba(0, 255, 255, 0.4),
+        0 0 90px rgba(0, 255, 255, 0.2),
+        0 0 120px rgba(147, 112, 219, 0.25);
+}
+
+.ptpl-quote {
+    font-size: 18px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: center;
+    letter-spacing: 2px;
+    line-height: 1.7;
+    padding: 0 8px;
+}
+
+.ptpl-qr {
+    /* QRCode 库写入 canvas/img 后自动填充尺寸 */
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    line-height: 0;
+}
+
+.ptpl-brand {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: rgba(255, 255, 255, 0.2);
+    font-weight: 300;
+}
+
+/* 胶片噪点叠层（SVG feTurbulence 平铺，截图后增加质感）*/
+.ptpl-noise {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.038;
+    /* 200×200 SVG 噪点 tile，以 base64 内联保证 html-to-image 可捕获 */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    background-repeat: repeat;
+}
+
+/* ════════════════════════════════════════════════════
+   全屏预览遮罩层
+   ════════════════════════════════════════════════════ */
+#poster-preview {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.93);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    opacity: 0;
+    transition: opacity 0.65s ease;
+    pointer-events: none;
+}
+
+#poster-preview:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Loading 状态 */
+#poster-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+#poster-loading.hidden { display: none; }
+
+.poster-loading-ring {
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(0, 255, 255, 0.15);
+    border-top-color: rgba(0, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: posterSpin 0.9s linear infinite;
+}
+
+@keyframes posterSpin {
+    to { transform: rotate(360deg); }
+}
+
+.poster-loading-text {
+    font-size: 0.82rem;
+    letter-spacing: 3px;
+    color: rgba(0, 255, 255, 0.6);
+}
+
+/* 图片预览体 */
+.poster-preview-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    transform: translateY(16px);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#poster-preview:not(.hidden) .poster-preview-body {
+    transform: translateY(0);
+}
+
+.poster-preview-body.hidden { display: none; }
+
+.poster-preview-hint {
+    font-size: 0.82rem;
+    letter-spacing: 3px;
+    color: rgba(0, 255, 255, 0.8);
+    animation: previewHintPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes previewHintPulse {
+    0%, 100% { opacity: 0.7; }
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 12px rgba(0, 255, 255, 0.55);
+    }
+}
+
+#poster-preview-img {
+    /* 最大不超过屏幕高度的 70%，保持 9:16 */
+    max-height: 70vh;
+    width: auto;
+    max-width: min(calc(70vh * 9 / 16), 90vw);
+    border-radius: 14px;
+    display: block;
+    box-shadow:
+        0 0 50px rgba(0, 255, 255, 0.12),
+        0 24px 64px rgba(0, 0, 0, 0.85);
+}
+
+#poster-preview-close {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.4);
+    padding: 10px 36px;
+    border-radius: 24px;
+    font-size: 0.82rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+#poster-preview-close:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── 海报模板 CTA + 域名水印 ────────────────────────── */
+.ptpl-cta {
+    font-size: 20px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: rgba(0, 255, 255, 0.45);
+    text-align: center;
+    margin: 0 0 4px;
+}
+
+.ptpl-footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.ptpl-footer-right {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ptpl-domain {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: rgba(0, 255, 255, 0.35);
+    font-family: 'Courier New', monospace;
+    font-weight: 400;
+}
+
+/* ── 星际档案按钮（controls-group 内）──────────────── */
+#btn-archive {
+    background: rgba(0, 255, 255, 0.06) !important;
+    border-color: rgba(0, 255, 255, 0.4) !important;
+    color: rgba(0, 255, 255, 0.8) !important;
+    font-size: 1rem !important;
+    animation: archivePulse 2.5s infinite ease-in-out;
+}
+@keyframes archivePulse {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 16px rgba(0, 255, 255, 0.3); }
+}
+
+/* ════════════════════════════════════════════════════
+   一键分享 UI 增强
+   ════════════════════════════════════════════════════ */
+.quick-share-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(280px, 85vw);
+    margin: 12px auto 20px;
+}
+
+.quick-share-group button {
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    font-family: "PingFang SC", sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.btn-share-xhs {
+    background: #ff2442; /* 小红书红 */
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 36, 66, 0.25);
+}
+
+.btn-share-vx {
+    background: #07c160; /* 微信绿 */
+    color: white;
+    box-shadow: 0 4px 15px rgba(7, 193, 96, 0.25);
+}
+
+.quick-share-group button:active {
+    transform: scale(0.95);
+}
+
+.save-tip {
+    color: rgba(0, 255, 255, 0.6);
+    font-size: 11px;
+    margin-top: 15px;
+    letter-spacing: 2px;
+    animation: saveHintPulse 2s infinite ease-in-out;
+}
+
+@keyframes saveHintPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+/* 共鸣提示 UI 样式 */
+.resonance-toast {
+    position: fixed;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease-in-out; /* 缓慢淡入淡出 */
+    z-index: 100;
+    text-align: center;
+}
+
+.resonance-toast.show {
+    opacity: 1;
+}
+
+.resonance-text {
+    font-family: -apple-system, "PingFang SC", sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* ════════════════════════════════════════════════════
+   仪式感转场：全屏闪白
+   ════════════════════════════════════════════════════ */
+#ritual-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    opacity: 0;
+    z-index: 5000;
+    pointer-events: none;
+}
+
+#ritual-flash.active {
+    animation: flashStrike 1.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+@keyframes flashStrike {
+    0% { opacity: 0.8; }
+    50% { opacity: 0.2; }
+    100% { opacity: 0; }
 }

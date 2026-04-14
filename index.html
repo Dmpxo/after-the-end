@@ -4,27 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>终点之后 - 你的遗言</title>
-    <meta name="description" content="如果明天是终点，你的两字遗言是？一个沉浸式的灵魂共鸣视觉实验。">
-    <meta name="keywords" content="遗言,星空,粒子动画,交互艺术,灵魂共鸣">
-    
-    <!-- Open Graph / Facebook -->
+    <title>AfterTheEnd | 终点之后</title>
+    <meta name="description" content="如果这是最后一次，你想留下哪两个字？加入众生星系，在星海中寻找共鸣。">
+    <meta name="keywords" content="AfterTheEnd,终点之后,遗言,星空,粒子动画,交互艺术,灵魂共鸣">
+
+    <!-- Open Graph / Facebook / WeChat -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lastwords.example.com/">
-    <meta property="og:title" content="终点之后 - 你的遗言">
-    <meta property="og:description" content="入星海，寻共鸣。记录你最后的两个字。">
-    <meta property="og:image" content="cover.jpg">
+    <meta property="og:url" content="https://end-dmpxo.art/">
+    <meta property="og:title" content="AfterTheEnd | 终点之后">
+    <meta property="og:description" content="如果这是最后一次，你想留下哪两个字？加入众生星系，在星海中寻找共鸣。">
+    <meta property="og:image" content="https://end-dmpxo.art/og-cover.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:site_name" content="AfterTheEnd">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:title" content="终点之后 - 你的遗言">
-    <meta property="twitter:description" content="一个沉浸式的灵魂共鸣视觉实验。">
+    <meta property="twitter:title" content="AfterTheEnd | 终点之后">
+    <meta property="twitter:description" content="在宇宙的尽头，留下你的回响。">
+    <meta property="twitter:image" content="https://end-dmpxo.art/og-cover.jpg">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
-    <link rel="stylesheet" href="style.css?v=2.2">
+    <link rel="stylesheet" href="style.css?v=2.5">
 </head>
 
 <body>
+    <!-- 仪式感转场闪屏 -->
+    <div id="ritual-flash"></div>
     <canvas id="canvas"></canvas>
     
     <!-- 音频控制 -->
@@ -40,15 +47,30 @@
         <div class="shooting-star"></div>
     </div>
 
+    <!-- 实时流星通知（右上角，不干扰主流程）-->
+    <div id="star-notify"></div>
+
+    <!-- 粒子消散期过渡提示 -->
+    <div id="transition-hint" class="hidden"></div>
+
     <div id="container">
         <div id="input-section">
+            <!-- 回访用户档案提示 -->
+            <div id="archive-hint" class="hidden">
+                上次你留下了 <strong id="archive-word"></strong>，
+                现在已有 <span id="archive-echo-count">…</span> 人与你共鸣
+            </div>
+
             <h1 id="prompt">如果明天是终点，你的两字遗言是？</h1>
             <input type="text" id="final-words" maxlength="2" autocomplete="off" placeholder="...">
+
+            <!-- 首屏社会证明 -->
+            <div id="live-stats">
+                <span id="live-count">…</span>
+                <span class="live-label"> 位灵魂已在此留下印记</span>
+            </div>
         </div>
 
-        <div id="result-section" class="hidden">
-            <button id="reset-btn">查看众生共鸣</button>
-        </div>
     </div>
 
     <div class="galaxy-map-overlay" id="galaxy-overlay">
@@ -74,29 +96,93 @@
         <div id="controls-group">
             <button id="btn-reset-view" title="回归中心">⌖</button>
             <button id="btn-panorama" title="众生全景">🌐</button>
-            <button id="btn-share" title="生成分享卡片">📤</button>
+            <button id="btn-share" title="全球灵魂数">📤</button>
+            <button id="btn-archive" title="生成星际档案" class="hidden">🗃</button>
         </div>
 
         <!-- 星球悬停提示 -->
         <div id="planet-tooltip"></div>
 
-        <div id="resonance-toast"></div>
+        <div id="resonance-toast" class="resonance-toast">
+            <span class="resonance-text"></span>
+        </div>
 
         <!-- 分享卡片 2.0 遮罩层 -->
         <div id="share-overlay" class="hidden">
-            <div class="share-card">
+            <div id="share-image-container"></div>
+            <div class="share-card" id="share-card-dom">
                 <div class="share-header">✨ 终点之后</div>
                 <div class="share-content">
                     <p id="share-text">你是全球第 <span id="share-n">0</span> 位在这里留下信号的人。</p>
                 </div>
                 <div class="share-footer">
-                    <button id="close-share">返回星海</button>
                     <div class="share-hint">长按屏幕保存这张记忆</div>
                 </div>
+            </div>
+            <button id="close-share">×</button>
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════
+         海报模板（脱离文档流，仅用于 html-to-image 截图）
+         ═══════════════════════════════════════════════ -->
+    <div id="poster-tpl" aria-hidden="true">
+        <!-- 胶片噪点叠层 -->
+        <div class="ptpl-noise" aria-hidden="true"></div>
+
+        <div class="ptpl-header">✦ &nbsp;星际档案 &nbsp;·&nbsp; STELLAR ARCHIVE &nbsp;✦</div>
+        <div class="ptpl-divider"></div>
+
+        <div class="ptpl-coords" id="ptpl-coords">Sector: ε7A &nbsp;|&nbsp; Index: 1402</div>
+
+        <div class="ptpl-word-wrap">
+            <div class="ptpl-word" id="ptpl-word">遗言</div>
+        </div>
+
+        <div class="ptpl-quote" id="ptpl-quote">在 10 亿光年外，有人与你感同身受</div>
+
+        <div class="ptpl-cta" id="ptpl-cta">你的两字遗言是什么？</div>
+
+        <div class="ptpl-divider ptpl-divider--bottom"></div>
+        <div class="ptpl-footer">
+            <div class="ptpl-qr" id="ptpl-qr"></div>
+            <div class="ptpl-footer-right">
+                <div class="ptpl-brand">AfterTheEnd &nbsp;·&nbsp; 终点之后</div>
+                <div class="ptpl-domain">end-dmpxo.art</div>
             </div>
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════
+         全屏预览遮罩层
+         ═══════════════════════════════════════════════ -->
+    <div id="poster-preview" class="hidden">
+        <!-- Loading 状态 -->
+        <div id="poster-loading" class="hidden">
+            <div class="poster-loading-ring"></div>
+            <div class="poster-loading-text">正在生成星际档案…</div>
+        </div>
+        <!-- 图片预览 -->
+        <div class="poster-preview-body" id="poster-preview-body">
+            <div class="poster-preview-hint">长按图片保存你的星际档案</div>
+            <img id="poster-preview-img" src="" alt="星际档案" />
+            
+            <p class="save-tip">图片已就绪</p>
+
+            <!-- 新增一键分享区域 -->
+            <div class="quick-share-group">
+                <button onclick="shareToSocial('xhs')" class="btn-share-xhs">
+                    一键文案并去小红书
+                </button>
+                <button onclick="shareToSocial('wechat')" class="btn-share-vx">
+                    复制文案并去微信
+                </button>
+            </div>
+
+            <button id="poster-preview-close">返回星海</button>
+        </div>
+    </div>
 
     <!-- 视觉滤镜资源 -->
     <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true" focusable="false">
@@ -110,12 +196,24 @@
                 <feBlend in="red-offset" in2="green-offset" mode="screen" result="rg" />
                 <feBlend in="rg" in2="blue" mode="screen" />
             </filter>
+            <!-- 噪点滤镜：增强海报质感 -->
+            <filter id="film-grain">
+                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+                <feColorMatrix type="saturate" values="0" />
+                <feComponentTransfer>
+                    <feFuncR type="linear" slope="0.1" />
+                    <feFuncG type="linear" slope="0.1" />
+                    <feFuncB type="linear" slope="0.1" />
+                </feComponentTransfer>
+            </filter>
         </defs>
     </svg>
 
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=2.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="script.js?v=2.5"></script>
 </body>
 
 </html>
