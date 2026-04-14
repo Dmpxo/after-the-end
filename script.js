@@ -1572,12 +1572,39 @@ async function generateSharePoster(word, echoCount = 1) {
     try {
         // 4. 截图：移动端降为 1.5x 防内存溢出，桌面保持 2x
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const dataUrl = await htmlToImage.toPng(tpl, {
-            pixelRatio: isMobile ? 1.5 : 2,
-            backgroundColor: '#050505',
-            style: { opacity: 1 },
-            skipFonts: false,
-        });
+
+        // 移动端：注入临时 style 禁用 ::before 的 SVG filter 引用
+        // （html-to-image 克隆 DOM 时找不到外部 #film-grain，会导致整个截图失败）
+        let mobileStylePatch = null;
+        if (isMobile) {
+            mobileStylePatch = document.createElement('style');
+            mobileStylePatch.id = '_poster-mobile-patch';
+            mobileStylePatch.textContent = '#poster-tpl::before { filter: none !important; }';
+            document.head.appendChild(mobileStylePatch);
+        }
+
+        let dataUrl;
+        try {
+            dataUrl = await htmlToImage.toPng(tpl, {
+                pixelRatio: isMobile ? 1.5 : 2,
+                backgroundColor: '#050505',
+                style: { opacity: 1 },
+                skipFonts: true,
+            });
+        } catch (firstErr) {
+            console.warn('[Poster] first capture failed, retrying at 1x:', firstErr);
+            if (!isMobile) throw firstErr;
+            // 移动端降级：1x + 跳过 noise 节点
+            dataUrl = await htmlToImage.toPng(tpl, {
+                pixelRatio: 1,
+                backgroundColor: '#050505',
+                style: { opacity: 1 },
+                skipFonts: true,
+                filter: node => !node.classList?.contains('ptpl-noise'),
+            });
+        } finally {
+            if (mobileStylePatch) mobileStylePatch.remove();
+        }
 
         // 5. 写入图片，切换到预览状态
         previewImg.src = dataUrl;
