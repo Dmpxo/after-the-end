@@ -674,11 +674,6 @@ let lastAngle = 0;
 let lastTime = 0;
 let momentumId = null;
 
-// 初始位置：六月在顶部
-currentAngle = -currentIndex * anglePer;
-wheel.style.transform = `rotate(${currentAngle}deg)`;
-updateCenter(currentIndex);
-
 function getAngle(clientX, clientY) {
   const rect = wheelWrapper.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -827,13 +822,7 @@ document.addEventListener('touchmove', onDrag, { passive: false });
 document.addEventListener('touchend', endDrag);
 
 // ============ 渲染详情 ============
-detailPanel = document.getElementById('detailPanel');
-detailTag = document.getElementById('detailTag');
-detailName = document.getElementById('detailName');
-detailSub = document.getElementById('detailSub');
-accordion = document.getElementById('accordion');
 
-// 初始渲染详情（延迟确保所有DOM引用就绪）
 function mdToHtml(text) {
   if (!text) return '';
   text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -991,6 +980,32 @@ window.addEventListener('resize', () => {
     body.style.maxHeight = inner.scrollHeight + 30 + 'px';
   });
 });
+
+// ============ 初始化渲染 ============
+function initRender() {
+  detailPanel = document.getElementById('detailPanel');
+  detailTag = document.getElementById('detailTag');
+  detailName = document.getElementById('detailName');
+  detailSub = document.getElementById('detailSub');
+  accordion = document.getElementById('accordion');
+  
+  if (!accordion) {
+    setTimeout(initRender, 50);
+    return;
+  }
+  
+  // 初始位置：六月在顶部
+  currentAngle = -currentIndex * anglePer;
+  wheel.style.transform = `rotate(${currentAngle}deg)`;
+  updateCenter(currentIndex);
+  renderDetail(currentIndex);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initRender);
+} else {
+  initRender();
+}
 
 </script>
 <!-- AI 香道顾问 -->
