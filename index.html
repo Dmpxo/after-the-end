@@ -1,215 +1,980 @@
 <!DOCTYPE html>
-<html lang="zh">
-
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AfterTheEnd | 终点之后</title>
-    <meta name="description" content="如果这是最后一次，你想留下哪两个字？加入众生星系，在星海中寻找共鸣。">
-    <meta name="keywords" content="AfterTheEnd,终点之后,遗言,星空,粒子动画,交互艺术,灵魂共鸣">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>十二花神 · 逐月寻香 | 思愈界</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg-deep:#1a1612;--bg-card:#252019;
+      --accent-gold:#c9a96e;--accent-gold-dim:rgba(201,169,110,0.6);
+      --accent-sage:#8ba888;
+      --text-primary:#f0ebe3;--text-muted:#8a8078;--text-faint:#5a5248;
+      --border-subtle:rgba(201,169,110,0.12);
+      --shadow-float:0 20px 60px rgba(0,0,0,0.7);
+      --radius:16px;--radius-sm:8px;
+    }
+    html{scroll-behavior:smooth}
+    body{
+      font-family:'Noto Sans SC',sans-serif;
+      background:var(--bg-deep);color:var(--text-primary);
+      min-height:100vh;overflow-x:hidden;line-height:1.7;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;
+      background:
+        radial-gradient(ellipse at 20% 20%,rgba(201,169,110,0.04) 0%,transparent 50%),
+        radial-gradient(ellipse at 80% 80%,rgba(139,168,136,0.03) 0%,transparent 50%);
+      pointer-events:none;z-index:0;
+    }
 
-    <!-- Open Graph / Facebook / WeChat -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://end-dmpxo.art/">
-    <meta property="og:title" content="AfterTheEnd | 终点之后">
-    <meta property="og:description" content="如果这是最后一次，你想留下哪两个字？加入众生星系，在星海中寻找共鸣。">
-    <meta property="og:image" content="https://end-dmpxo.art/og-cover.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:locale" content="zh_CN">
-    <meta property="og:site_name" content="AfterTheEnd">
+    /* ====== 粒子背景 ====== */
+    .particles-container{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;perspective:800px}
+    .particle{position:absolute;width:3px;height:3px;background:radial-gradient(circle,rgba(201,169,110,0.7) 0%,transparent 70%);border-radius:50%;animation:float-p linear infinite;transform-style:preserve-3d}
+    @keyframes float-p{0%{transform:translateY(100vh) rotateX(0deg) scale(1);opacity:0}10%{opacity:.7}90%{opacity:.7}100%{transform:translateY(-10vh) rotateX(360deg) scale(.3);opacity:0}}
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:title" content="AfterTheEnd | 终点之后">
-    <meta property="twitter:description" content="在宇宙的尽头，留下你的回响。">
-    <meta property="twitter:image" content="https://end-dmpxo.art/og-cover.jpg">
+    .container{max-width:1100px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
-    <link rel="stylesheet" href="style.css?v=2.6">
+    /* ====== HERO ====== */
+    .hero{text-align:center;padding:60px 20px 30px;position:relative}
+    .hero-sub-en{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:var(--accent-gold-dim);letter-spacing:.3em;margin-bottom:10px;opacity:0;animation:hero-in 1s ease-out .2s forwards}
+    .hero-title{font-family:'Noto Serif SC',serif;font-size:clamp(2rem,8vw,3.2rem);font-weight:700;letter-spacing:.15em;margin-bottom:6px;opacity:0;animation:hero-in 1s ease-out .5s forwards}
+    .hero-title span{color:var(--accent-gold);text-shadow:0 0 30px rgba(201,169,110,0.3)}
+    .hero-sub{font-size:.85rem;color:var(--text-muted);letter-spacing:.4em;opacity:0;animation:hero-in 1s ease-out .8s forwards}
+    .hero-divider{width:100px;height:1px;background:linear-gradient(90deg,transparent,var(--accent-gold),transparent);margin:20px auto 0;opacity:0;animation:hero-in 1s ease-out 1.1s forwards}
+    @keyframes hero-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ====== 轮盘区域 ====== */
+    .wheel-section{padding:20px 0 40px;position:relative}
+    .wheel-wrapper{
+      position:relative;width:min(520px,92vw);height:min(520px,92vw);
+      margin:0 auto;
+      touch-action:none;
+      user-select:none;
+    }
+
+    /* 外圈光晕 */
+    .wheel-glow{
+      position:absolute;inset:-20px;border-radius:50%;
+      background:radial-gradient(circle,rgba(201,169,110,0.08) 0%,transparent 70%);
+      animation:pulse-glow 4s ease-in-out infinite;
+    }
+    @keyframes pulse-glow{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+
+    /* 轮盘本体 */
+    .wheel{
+      position:absolute;inset:0;border-radius:50%;
+      cursor:grab;
+      transition:transform .05s linear;
+    }
+    .wheel.grabbing{cursor:grabbing;transition:none}
+    .wheel.settling{transition:transform .8s cubic-bezier(.19,1,.22,1)}
+
+    .wheel svg{width:100%;height:100%;overflow:visible}
+
+    /* 中心装饰 */
+    .wheel-center{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      width:28%;height:28%;border-radius:50%;
+      background:radial-gradient(circle,#2a2219 0%,#1a1612 70%);
+      border:1px solid rgba(201,169,110,0.25);
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;text-align:center;
+      box-shadow:0 0 40px rgba(201,169,110,0.1),inset 0 0 30px rgba(0,0,0,0.5);
+      pointer-events:none;z-index:5;
+    }
+    .wheel-center-month{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--accent-gold);font-weight:400;letter-spacing:.1em;line-height:1}
+    .wheel-center-season{font-size:.65rem;color:var(--text-muted);letter-spacing:.3em;margin-top:6px}
+    .wheel-center-flower{font-family:'Noto Serif SC',serif;font-size:.85rem;color:var(--text-primary);margin-top:6px;letter-spacing:.1em}
+
+    /* 顶部指针 */
+    .wheel-pointer{
+      position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+      width:0;height:0;
+      border-left:12px solid transparent;border-right:12px solid transparent;
+      border-top:20px solid var(--accent-gold);
+      filter:drop-shadow(0 2px 6px rgba(201,169,110,0.4));
+      z-index:10;
+    }
+
+    /* 操作提示 */
+    .wheel-hint{
+      text-align:center;margin-top:16px;
+      font-size:.7rem;color:var(--text-faint);letter-spacing:.25em;
+      opacity:0;animation:hero-in 1s ease-out 1.4s forwards;
+    }
+    .wheel-hint span{display:inline-flex;align-items:center;gap:6px}
+
+    /* 月份切换按钮 */
+    .month-nav{
+      display:flex;justify-content:center;gap:12px;margin-top:14px;
+      opacity:0;animation:hero-in 1s ease-out 1.6s forwards;
+    }
+    .nav-btn{
+      background:rgba(201,169,110,0.06);border:1px solid rgba(201,169,110,0.2);
+      color:var(--accent-gold);padding:8px 18px;border-radius:20px;
+      font-family:'Noto Sans SC',sans-serif;font-size:.75rem;letter-spacing:.15em;
+      cursor:pointer;transition:all .3s ease;
+    }
+    .nav-btn:hover{background:rgba(201,169,110,0.12);border-color:var(--accent-gold)}
+    .nav-btn:disabled{opacity:.3;cursor:not-allowed}
+
+    /* ====== 详情面板 ====== */
+    .detail-section{padding:10px 0 60px;opacity:0;animation:hero-in .8s ease-out 1.8s forwards}
+    .detail-panel{
+      max-width:720px;margin:0 auto;
+      background:linear-gradient(165deg,var(--bg-card) 0%,#1e1a14 100%);
+      border:1px solid rgba(201,169,110,0.2);
+      border-radius:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+      overflow:hidden;
+    }
+
+    /* 详情头 */
+    .detail-header{
+      padding:32px 28px 20px;
+      border-bottom:1px solid var(--border-subtle);
+      background:linear-gradient(180deg,rgba(201,169,110,0.06) 0%,transparent 100%);
+      position:relative;overflow:hidden;
+    }
+    .detail-header::before{
+      content:'';position:absolute;top:-50%;right:-20%;width:60%;height:200%;
+      background:radial-gradient(ellipse,rgba(201,169,110,0.06) 0%,transparent 70%);
+      pointer-events:none;
+    }
+    .detail-month-tag{
+      display:inline-block;font-size:.65rem;letter-spacing:.3em;color:var(--accent-gold);
+      border:1px solid rgba(201,169,110,0.25);padding:3px 14px;border-radius:12px;
+      margin-bottom:10px;background:rgba(201,169,110,0.06);
+    }
+    .detail-name{
+      font-family:'Noto Serif SC',serif;font-size:1.6rem;font-weight:600;letter-spacing:.08em;
+      margin-bottom:4px;
+    }
+    .detail-name .en{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--accent-gold-dim);font-weight:400;margin-left:10px;letter-spacing:.1em}
+    .detail-flower-sub{font-size:.82rem;color:var(--text-muted);letter-spacing:.2em}
+
+    /* 季度主题条 */
+    .quarter-bar{
+      margin-top:14px;padding:10px 14px;
+      background:linear-gradient(90deg,rgba(201,169,110,0.08) 0%,rgba(139,168,136,0.04) 100%);
+      border-left:2px solid var(--accent-gold);border-radius:0 8px 8px 0;
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      font-size:.72rem;
+    }
+    .quarter-bar .q-label{color:var(--accent-gold);letter-spacing:.2em;font-weight:500}
+    .quarter-bar .q-name{color:var(--text-primary);font-family:'Noto Serif SC',serif;font-size:.85rem;letter-spacing:.15em}
+    .quarter-bar .q-sub{color:var(--text-muted);letter-spacing:.1em;font-size:.68rem}
+
+    /* 设计主旨标签 */
+    .aim-tag{
+      display:inline-block;margin-top:8px;
+      font-size:.66rem;letter-spacing:.25em;color:var(--accent-sage);
+      border:1px solid rgba(139,168,136,0.3);background:rgba(139,168,136,0.06);
+      padding:3px 12px;border-radius:12px;
+    }
+
+    /* 预告状态 */
+    .detail-panel.teaser .detail-header{opacity:.5}
+    .teaser-badge{
+      display:inline-block;font-size:.6rem;letter-spacing:.3em;color:var(--text-faint);
+      border:1px solid rgba(90,82,72,0.4);padding:3px 12px;border-radius:12px;
+      margin-bottom:10px;
+    }
+    .teaser-text{
+      padding:40px 28px;text-align:center;color:var(--text-faint);
+      font-size:.85rem;line-height:2;letter-spacing:.1em;
+    }
+    .teaser-text .icon{font-size:2.5rem;margin-bottom:14px;opacity:.4}
+
+    /* ====== 手风琴 ====== */
+    .accordion{padding:4px 0}
+    .acc-item{border-bottom:1px solid var(--border-subtle)}
+    .acc-item:last-child{border-bottom:none}
+    .acc-head{
+      padding:18px 28px;cursor:pointer;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      transition:background .3s ease;
+    }
+    .acc-head:hover{background:rgba(201,169,110,0.03)}
+    .acc-head-left{display:flex;align-items:center;gap:14px;min-width:0}
+    .acc-num{
+      font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--accent-gold);
+      font-style:italic;min-width:24px;
+    }
+    .acc-title{
+      font-family:'Noto Serif SC',serif;font-size:.95rem;font-weight:500;letter-spacing:.1em;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .acc-arrow{
+      width:10px;height:10px;border-right:1px solid var(--accent-gold-dim);
+      border-bottom:1px solid var(--accent-gold-dim);
+      transform:rotate(-45deg);transition:transform .3s ease;
+      flex-shrink:0;
+    }
+    .acc-item.open .acc-arrow{transform:rotate(45deg)}
+    .acc-body{
+      max-height:0;overflow:hidden;
+      transition:max-height .4s cubic-bezier(.4,0,.2,1);
+    }
+    .acc-body-inner{
+      padding:0 28px 22px 66px;
+      font-size:.85rem;color:var(--text-muted);line-height:1.9;
+    }
+    .acc-body-inner p{margin-bottom:8px}
+    .acc-body-inner p:last-child{margin-bottom:0}
+
+    /* 品鉴三段式 */
+    .tasting-stages{display:grid;gap:10px;margin-top:6px}
+    .tasting-stage{
+      background:rgba(201,169,110,0.04);border:1px solid rgba(201,169,110,0.12);
+      border-radius:10px;padding:12px 16px;
+      display:flex;align-items:flex-start;gap:12px;
+    }
+    .stage-dot{
+      width:8px;height:8px;border-radius:50%;margin-top:7px;flex-shrink:0;
+    }
+    .stage-dot.top{background:#d4a872}
+    .stage-dot.mid{background:#8ba888}
+    .stage-dot.base{background:#6b5a4a}
+    .stage-label{font-size:.7rem;color:var(--accent-gold);letter-spacing:.2em;margin-bottom:2px}
+    .stage-desc{font-size:.82rem;color:var(--text-muted);line-height:1.6}
+
+    /* 效用标签 */
+    .effect-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+    .effect-tag{
+      background:rgba(139,168,136,0.1);border:1px solid rgba(139,168,136,0.25);
+      color:var(--accent-sage);font-size:.75rem;padding:4px 14px;border-radius:14px;
+    }
+
+    /* 配料列表 */
+    .ingredient-list{display:grid;gap:6px;margin-top:6px}
+    .ing-item{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:8px 12px;background:rgba(201,169,110,0.04);
+      border:1px solid rgba(201,169,110,0.1);border-radius:8px;
+      font-size:.8rem;
+    }
+    .ing-name{color:var(--text-primary);font-weight:500}
+    .ing-role{color:var(--accent-gold-dim);font-size:.7rem;letter-spacing:.1em}
+
+    /* 底部 CTA */
+    .detail-footer{
+      padding:24px 28px;text-align:center;
+      border-top:1px solid var(--border-subtle);
+      background:rgba(0,0,0,0.2);
+    }
+    .back-btn{
+      display:inline-block;padding:12px 32px;border-radius:24px;
+      background:linear-gradient(135deg,var(--accent-gold),#b8935a);
+      color:var(--bg-deep);font-size:.85rem;letter-spacing:.2em;
+      text-decoration:none;font-weight:500;cursor:pointer;border:none;
+      transition:all .3s ease;font-family:'Noto Sans SC',sans-serif;
+    }
+    .back-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,169,110,0.3)}
+
+    /* 底部版权 */
+    .footer{text-align:center;padding:30px 20px;font-size:.7rem;color:var(--text-faint);letter-spacing:.2em}
+
+    /* ====== 响应式 ====== */
+    @media (max-width:600px){
+      .hero{padding:40px 20px 20px}
+      .wheel-wrapper{width:min(420px,94vw);height:min(420px,94vw)}
+      .wheel-center-month{font-size:1.5rem}
+      .wheel-center-season{font-size:.55rem}
+      .wheel-center-flower{font-size:.7rem}
+      .detail-header{padding:24px 20px 16px}
+      .detail-name{font-size:1.3rem}
+      .acc-head{padding:14px 20px}
+      .acc-body-inner{padding:0 20px 18px 50px;font-size:.82rem}
+      .detail-footer{padding:20px}
+    }
+    @media (max-width:380px){
+      .wheel-wrapper{width:96vw;height:96vw}
+    }
+    /* AI 香道顾问 */
+    .ai-chat-btn{position:fixed;right:24px;bottom:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent-gold),#8b6914);border:none;box-shadow:0 6px 20px rgba(201,169,110,0.5);cursor:pointer;z-index:9999;transition:transform 0.3s,box-shadow 0.3s;display:flex;align-items:center;justify-content:center}
+    .ai-chat-btn:hover{transform:scale(1.1);box-shadow:0 8px 25px rgba(201,169,110,0.7)}
+    .ai-chat-btn svg{width:26px;height:26px;fill:#fff}
+    .ai-chat-panel{position:fixed;right:24px;bottom:24px;width:420px;max-height:650px;background:rgba(20,16,10,0.98);border:1px solid rgba(201,169,110,0.4);border-radius:20px;box-shadow:0 15px 50px rgba(0,0,0,0.6);z-index:9998;transform:translateY(120%) scale(0.95);opacity:0;transition:all 0.35s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;overflow:hidden}
+    .ai-chat-panel.open{transform:translateY(0) scale(1);opacity:1}
+    .ai-chat-header{padding:16px 20px;background:linear-gradient(135deg,rgba(201,169,110,0.15),transparent);border-bottom:1px solid rgba(201,169,110,0.2);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .ai-chat-header h4{margin:0;color:var(--accent-gold);font-size:16px;letter-spacing:3px;font-weight:normal}
+    .ai-model-label{font-size:11px;color:#888;background:rgba(255,255,255,0.06);padding:4px 8px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+    .ai-chat-close{background:none;border:none;color:#888;font-size:22px;cursor:pointer;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;line-height:1}
+    .ai-chat-close:hover{color:var(--accent-gold)}
+    .ai-chat-messages{flex:1;padding:16px;overflow-y:auto;min-height:200px;max-height:400px}
+    .ai-chat-messages::-webkit-scrollbar{width:6px}
+    .ai-chat-messages::-webkit-scrollbar-track{background:rgba(255,255,255,0.03)}
+    .ai-chat-messages::-webkit-scrollbar-thumb{background:rgba(201,169,110,0.4);border-radius:3px}
+    .msg{margin-bottom:12px;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.7;max-width:85%;word-wrap:break-word}
+    .msg.user{background:rgba(201,169,110,0.25);color:#e8dcc8;margin-left:auto;border-bottom-right-radius:6px}
+    .msg.ai{background:rgba(255,255,255,0.06);color:#d4c4a8;border-bottom-left-radius:6px}
+    .msg.typing{display:flex;align-items:center;gap:5px;min-height:28px}
+    .typing-dots span{width:7px;height:7px;background:var(--accent-gold);border-radius:50%;display:inline-block;animation:typing 1.4s infinite ease-in-out both}
+    .typing-dots span:nth-child(1){animation-delay:-0.32s}
+    .typing-dots span:nth-child(2){animation-delay:-0.16s}
+    @keyframes typing{0%,80%,100%{transform:scale(0);opacity:0.5}40%{transform:scale(1);opacity:1}}
+    .ai-chat-input-area{padding:14px;border-top:1px solid rgba(201,169,110,0.2);background:rgba(0,0,0,0.2);position:relative}
+    .ai-chat-input{width:100%;padding:12px 45px 12px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,169,110,0.25);border-radius:24px;color:#e8dcc8;font-size:14px;resize:none;outline:none;box-sizing:border-box;line-height:1.6;font-family:inherit}
+    .ai-chat-input:focus{border-color:rgba(201,169,110,0.6)}
+    .ai-chat-input::placeholder{color:#666}
+    .ai-chat-send{position:absolute;right:18px;bottom:18px;background:none;border:none;color:var(--accent-gold);cursor:pointer;padding:8px;display:flex;align-items:center}
+    .ai-chat-send svg{width:20px;height:20px;fill:var(--accent-gold)}
+    .ai-chat-settings{display:none;padding:10px 16px;border-top:1px solid rgba(201,169,110,0.1);background:rgba(0,0,0,0.1);font-size:12px}
+    .ai-chat-settings details{color:#888}
+    .ai-chat-settings summary{cursor:pointer;margin-bottom:8px;list-style:none;user-select:none}
+    .ai-chat-settings summary::-webkit-details-marker{display:none}
+    .ai-chat-settings input,.ai-chat-settings select{width:100%;padding:6px 8px;margin:4px 0;background:rgba(255,255,255,0.05);border:1px solid rgba(201,169,110,0.2);border-radius:6px;color:#e8dcc8;font-size:12px;box-sizing:border-box;outline:none;font-family:inherit}
+    .ai-chat-settings input:focus,.ai-chat-settings select:focus{border-color:rgba(201,169,110,0.5)}
+    .ai-chat-settings select option{background:#1a140a;color:#e8dcc8}
+    .quick-questions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:center}
+    .quick-q{padding:5px 12px;background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.25);border-radius:14px;color:var(--accent-gold);font-size:12px;cursor:pointer;transition:all 0.2s;user-select:none;letter-spacing:1px}
+    .quick-q:hover{background:rgba(201,169,110,0.25);border-color:rgba(201,169,110,0.5)}
+    .welcome-msg{text-align:center;padding:20px 15px;color:var(--accent-gold)}
+    .welcome-msg strong{color:#d4c4a8;font-weight:normal}
+  </style>
 </head>
-
 <body>
-    <!-- 仪式感转场闪屏 -->
-    <div id="ritual-flash"></div>
-    <canvas id="canvas"></canvas>
-    
-    <!-- 音频控制 -->
-    <div id="audio-control" title="音效开关">
-        <span id="audio-icon">🔇</span>
+<div class="particles-container" id="particles"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-sub-en">TWELVE FLOWER GODDESSES</p>
+  <h1 class="hero-title">十二<span>花神</span></h1>
+  <p class="hero-sub">逐 月 寻 香 · 节 气 合 香</p>
+  <div class="hero-divider"></div>
+</section>
+
+<!-- 轮盘 -->
+<section class="wheel-section">
+  <div class="container">
+    <div class="wheel-wrapper" id="wheelWrapper">
+      <div class="wheel-glow"></div>
+      <div class="wheel-pointer"></div>
+      <div class="wheel" id="wheel">
+        <svg viewBox="-100 -100 200 200" id="wheelSvg"></svg>
+      </div>
+      <div class="wheel-center">
+        <div class="wheel-center-month" id="centerMonth">六</div>
+        <div class="wheel-center-season" id="centerSeason">夏 至</div>
+        <div class="wheel-center-flower" id="centerFlower">紫莲</div>
+      </div>
     </div>
-
-    <div class="shooting-stars-container">
-        <div class="shooting-star"></div>
-        <div class="shooting-star"></div>
-        <div class="shooting-star"></div>
-        <div class="shooting-star"></div>
-        <div class="shooting-star"></div>
+    <p class="wheel-hint">
+      <span>⟵ 拖动轮盘 · 寻当月花神 ⟶</span>
+    </p>
+    <div class="month-nav">
+      <button class="nav-btn" id="prevBtn">◀ 上一月</button>
+      <button class="nav-btn" id="nextBtn">下一月 ▶</button>
     </div>
+  </div>
+</section>
 
-    <!-- 实时流星通知（右上角，不干扰主流程）-->
-    <div id="star-notify"></div>
-
-    <!-- 粒子消散期过渡提示 -->
-    <div id="transition-hint" class="hidden"></div>
-
-    <div id="container">
-        <div id="input-section">
-            <!-- 回访用户档案提示 -->
-            <div id="archive-hint" class="hidden">
-                上次你留下了 <strong id="archive-word"></strong>，
-                现在已有 <span id="archive-echo-count">…</span> 人与你共鸣
-            </div>
-
-            <h1 id="prompt">如果明天是终点，你的两字遗言是？</h1>
-            <input type="text" id="final-words" maxlength="2" autocomplete="off" placeholder="...">
-
-            <!-- 首屏社会证明 -->
-            <div id="live-stats">
-                <span id="live-count">…</span>
-                <span class="live-label"> 位灵魂已在此留下印记</span>
-            </div>
-        </div>
-
+<!-- 详情 -->
+<section class="detail-section">
+  <div class="container">
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        <div class="detail-month-tag" id="detailTag">陆月 · 荷花</div>
+        <h2 class="detail-name" id="detailName">紫 莲 <span class="en">Purple Lotus</span></h2>
+        <p class="detail-flower-sub" id="detailSub">六月荷花花神 · 西施</p>
+      </div>
+      <div class="accordion" id="accordion"></div>
+      <div class="detail-footer">
+        <button class="back-btn" onclick="document.getElementById('wheelWrapper').scrollIntoView({behavior:'smooth'})">返回花神轮盘</button>
+      </div>
     </div>
+  </div>
+</section>
 
-    <div class="galaxy-map-overlay" id="galaxy-overlay">
-        <!-- SVG 底层排布 -->
-        <svg id="galaxy-svg" viewBox="-400 -400 800 800" xmlns="http://www.w3.org/2000/svg"></svg>
+<p class="footer">思愈界 · 祝福妙香珠 | 慈莲如意</p>
 
-        <div id="galaxy-close">× 返回</div>
-        
-        <!-- 侧边排行榜 -->
-        <div id="leaderboard">
-            <div id="leaderboard-handle"></div>
-            <h2>众生共鸣榜</h2>
-            <!-- 全球实时统计 -->
-            <div id="global-stats">
-                <span class="global-label">已有</span>
-                <span id="global-soul-count">0</span>
-                <span class="global-label">位灵魂在此汇聚</span>
+<script src="flower_data.js"></script>
+<script src="product_knowledge.js"></script>
+<script>
+// ============ 季度主题 ============
+const QUARTER_THEME = {
+  1: { name: '春生启新', subtitle: '探春 · 醒神 / 沐风 · 悦心 / 祈岁 · 纳吉' },
+  2: { name: '盛夏清宁', subtitle: '静心 · 守清 / 净化 · 身心' },
+  3: { name: '清秋敛韵', subtitle: '敛气 · 固本 / 明心 · 见性' },
+  4: { name: '冬藏纳福', subtitle: '凝气 · 藏精 / 圆满 · 祈福' }
+};
+
+// DOM 元素引用（提前声明避免暂时性死区问题）
+let detailPanel, detailTag, detailName, detailSub, accordion;
+let wheelSvg, wheel, wheelWrapper, centerMonth, centerSeason, centerFlower, prevBtn, nextBtn;
+
+// ============ 粒子背景 ============
+(function createParticles(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDuration=(15+Math.random()*25)+'s';
+    p.style.animationDelay=Math.random()*20+'s';
+    const size=2+Math.random()*3;
+    p.style.width=p.style.height=size+'px';
+    c.appendChild(p);
+  }
+})();
+
+// ============ 构建轮盘 SVG ============
+wheelSvg = document.getElementById('wheelSvg');
+const monthCount = 12;
+const anglePer = 360 / monthCount;
+
+// 生成十二瓣花形扇区 + 花卉线稿
+let svgContent = '';
+
+// 外环装饰圈
+svgContent += `<circle cx="0" cy="0" r="96" fill="none" stroke="rgba(201,169,110,0.15)" stroke-width="0.5"/>`;
+svgContent += `<circle cx="0" cy="0" r="92" fill="none" stroke="rgba(201,169,110,0.08)" stroke-width="0.3"/>`;
+svgContent += `<circle cx="0" cy="0" r="42" fill="none" stroke="rgba(201,169,110,0.2)" stroke-width="0.5"/>`;
+svgContent += `<circle cx="0" cy="0" r="38" fill="none" stroke="rgba(201,169,110,0.1)" stroke-width="0.3"/>`;
+
+// 内圈背景
+svgContent += `<circle cx="0" cy="0" r="90" fill="url(#wheelBg)"/>`;
+svgContent += `<defs>
+  <radialGradient id="wheelBg" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#2a2219" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#1a1612" stop-opacity="0.8"/>
+  </radialGradient>
+  <radialGradient id="petalGrad" cx="50%" cy="30%" r="60%">
+    <stop offset="0%" stop-color="rgba(201,169,110,0.08)"/>
+    <stop offset="100%" stop-color="rgba(201,169,110,0.02)"/>
+  </radialGradient>
+</defs>`;
+
+// 花卉线稿函数（简化 SVG 图标）
+function flowerSvg(type, cx, cy, size) {
+  const s = size;
+  const gold = 'rgba(201,169,110,0.6)';
+  const goldDim = 'rgba(201,169,110,0.3)';
+  switch(type) {
+    case '梅花':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="0" r="2" fill="${gold}"/>
+          <ellipse cx="0" cy="-7" rx="3" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <ellipse cx="-6" cy="-3" rx="3" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.4" transform="rotate(-72)"/>
+          <ellipse cx="-6" cy="4" rx="3" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.4" transform="rotate(-144)"/>
+          <ellipse cx="6" cy="4" rx="3" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.4" transform="rotate(144)"/>
+          <ellipse cx="6" cy="-3" rx="3" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.4" transform="rotate(72)"/>
+        </g>`;
+    case '杏花':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="0" r="1.5" fill="${gold}"/>
+          <ellipse cx="0" cy="-6" rx="3.5" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35"/>
+          <ellipse cx="-5.5" cy="-2" rx="3.5" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(-70)"/>
+          <ellipse cx="-5" cy="4.5" rx="3.5" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(-140)"/>
+          <ellipse cx="5" cy="4.5" rx="3.5" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(140)"/>
+          <ellipse cx="5.5" cy="-2" rx="3.5" ry="5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(70)"/>
+        </g>`;
+    case '桃花':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="0" r="2" fill="${gold}"/>
+          <path d="M0,-8 Q-2,-5 -4,-6 Q-6,-4 -5,-1 Q-7,1 -5,3 Q-4,6 -1,5 Q1,7 3,5 Q6,4 5,1 Q7,-1 5,-3 Q4,-6 1,-5 Q-1,-7 0,-8Z" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+        </g>`;
+    case '芍药':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <ellipse cx="0" cy="0" rx="5" ry="7" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <ellipse cx="0" cy="-1" rx="3" ry="5" fill="none" stroke="${gold}" stroke-width="0.3"/>
+          <ellipse cx="0" cy="-2" rx="1.5" ry="3" fill="none" stroke="${gold}" stroke-width="0.3"/>
+          <path d="M-5,-4 Q-8,-2 -6,2" fill="none" stroke="${gold}" stroke-width="0.4"/>
+          <path d="M5,-4 Q8,-2 6,2" fill="none" stroke="${gold}" stroke-width="0.4"/>
+        </g>`;
+    case '石榴花': case '榴花':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <path d="M0,-7 Q-4,-6 -5,-2 Q-6,2 -3,5 Q0,7 3,5 Q6,2 5,-2 Q4,-6 0,-7Z" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <circle cx="-2" cy="-1" r="0.8" fill="${gold}"/>
+          <circle cx="2" cy="0" r="0.8" fill="${gold}"/>
+          <circle cx="0" cy="2" r="0.8" fill="${gold}"/>
+          <path d="M-4,-7 L-5,-9" stroke="${gold}" stroke-width="0.4"/>
+          <path d="M4,-7 L5,-9" stroke="${gold}" stroke-width="0.4"/>
+        </g>`;
+    case '荷花': case '莲花':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <ellipse cx="0" cy="0" rx="2" ry="6" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <ellipse cx="-4" cy="1" rx="2" ry="5.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(-25)"/>
+          <ellipse cx="4" cy="1" rx="2" ry="5.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(25)"/>
+          <ellipse cx="-6.5" cy="3" rx="2" ry="4.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.3" transform="rotate(-50)"/>
+          <ellipse cx="6.5" cy="3" rx="2" ry="4.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.3" transform="rotate(50)"/>
+          <circle cx="0" cy="3" r="1.5" fill="${gold}"/>
+        </g>`;
+    case '玉簪花': case '蜀葵':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <path d="M0,-8 Q-2,-5 -1.5,-2 Q-3,0 -2,3 Q-1,5 0,5 Q1,5 2,3 Q3,0 1.5,-2 Q2,-5 0,-8Z" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <path d="M0,5 L0,8" stroke="${gold}" stroke-width="0.5"/>
+          <ellipse cx="-1.5" cy="8.5" rx="1" ry="0.6" fill="${gold}"/>
+          <ellipse cx="1.5" cy="8.5" rx="1" ry="0.6" fill="${gold}"/>
+        </g>`;
+    case '桂花':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="-3" r="1.5" fill="${gold}"/>
+          <circle cx="-3" cy="0" r="1.5" fill="${gold}"/>
+          <circle cx="3" cy="0" r="1.5" fill="${gold}"/>
+          <circle cx="-2" cy="3" r="1.5" fill="${gold}"/>
+          <circle cx="2" cy="3" r="1.5" fill="${gold}"/>
+          <path d="M0,0 L0,-3" stroke="${gold}" stroke-width="0.5"/>
+          <path d="M0,0 L-3,0" stroke="${gold}" stroke-width="0.5"/>
+          <path d="M0,0 L3,0" stroke="${gold}" stroke-width="0.5"/>
+          <path d="M0,0 L-2,3" stroke="${gold}" stroke-width="0.5"/>
+          <path d="M0,0 L2,3" stroke="${gold}" stroke-width="0.5"/>
+        </g>`;
+    case '菊花':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="0" r="2.5" fill="${gold}"/>
+          ${[0,45,90,135,180,225,270,315].map(a=>
+            `<ellipse cx="0" cy="-6" rx="1.2" ry="4" fill="${goldDim}" stroke="${gold}" stroke-width="0.3" transform="rotate(${a})"/>`
+          ).join('')}
+        </g>`;
+    case '芙蓉花': case '芙蓉':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="0" r="2" fill="${gold}"/>
+          <path d="M0,-7 Q-3,-6 -4,-3 Q-6,-2 -5,1 Q-5,4 -2,5 Q0,7 2,5 Q5,4 5,1 Q6,-2 4,-3 Q3,-6 0,-7Z" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <path d="M-2,-4 Q0,-3 2,-4" fill="none" stroke="${gold}" stroke-width="0.3"/>
+          <path d="M-3,0 Q0,1 3,0" fill="none" stroke="${gold}" stroke-width="0.3"/>
+        </g>`;
+    case '山茶花': case '山茶':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="0" r="3" fill="${gold}"/>
+          <ellipse cx="0" cy="-5.5" rx="3.5" ry="3" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <ellipse cx="-5" cy="-1" rx="3" ry="3.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(-20)"/>
+          <ellipse cx="5" cy="-1" rx="3" ry="3.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(20)"/>
+          <ellipse cx="-3" cy="4.5" rx="3" ry="2.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35"/>
+          <ellipse cx="3" cy="4.5" rx="3" ry="2.5" fill="${goldDim}" stroke="${gold}" stroke-width="0.35"/>
+        </g>`;
+    case '水仙花': case '水仙':
+      return `
+        <g transform="translate(${cx},${cy}) scale(${s/20})">
+          <circle cx="0" cy="0" r="1.8" fill="${gold}"/>
+          <ellipse cx="0" cy="-6" rx="2.5" ry="4" fill="${goldDim}" stroke="${gold}" stroke-width="0.4"/>
+          <ellipse cx="-5" cy="-2" rx="2.5" ry="4" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(-72)"/>
+          <ellipse cx="-3.5" cy="5" rx="2.5" ry="4" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(-144)"/>
+          <ellipse cx="3.5" cy="5" rx="2.5" ry="4" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(144)"/>
+          <ellipse cx="5" cy="-2" rx="2.5" ry="4" fill="${goldDim}" stroke="${gold}" stroke-width="0.35" transform="rotate(72)"/>
+          <path d="M0,4 L0,8" stroke="${gold}" stroke-width="0.5"/>
+          <path d="M-1,8 L-2,9 M1,8 L2,9" stroke="${gold}" stroke-width="0.4"/>
+        </g>`;
+    default:
+      return `<circle cx="${cx}" cy="${cy}" r="${size/3}" fill="${goldDim}" stroke="${gold}" stroke-width="0.5"/>`;
+  }
+}
+
+// 生成12个扇区
+for (let i = 0; i < monthCount; i++) {
+  const item = FLOWER_DATA[i];
+  const startAngle = -90 + i * anglePer - anglePer / 2;
+  const endAngle = startAngle + anglePer;
+  const rOuter = 88;
+  const rInner = 18;
+
+  // 扇区路径
+  const x1 = rOuter * Math.cos(startAngle * Math.PI / 180);
+  const y1 = rOuter * Math.sin(startAngle * Math.PI / 180);
+  const x2 = rOuter * Math.cos(endAngle * Math.PI / 180);
+  const y2 = rOuter * Math.sin(endAngle * Math.PI / 180);
+  const x3 = rInner * Math.cos(endAngle * Math.PI / 180);
+  const y3 = rInner * Math.sin(endAngle * Math.PI / 180);
+  const x4 = rInner * Math.cos(startAngle * Math.PI / 180);
+  const y4 = rInner * Math.sin(startAngle * Math.PI / 180);
+
+  const isTeaser = !item.product;
+  const fillOpacity = isTeaser ? '0.02' : '0.06';
+  const strokeOpacity = isTeaser ? '0.08' : '0.2';
+  const textColor = isTeaser ? 'rgba(90,82,72,0.6)' : 'rgba(240,235,227,0.9)';
+  const subColor = isTeaser ? 'rgba(90,82,72,0.4)' : 'rgba(201,169,110,0.7)';
+
+  svgContent += `<path d="M${x1},${y1} A${rOuter},${rOuter} 0 0,1 ${x2},${y2} L${x3},${y3} A${rInner},${rInner} 0 0,0 ${x4},${y4} Z"
+    fill="rgba(201,169,110,${fillOpacity})" stroke="rgba(201,169,110,${strokeOpacity})" stroke-width="0.3"/>`;
+
+  // 扇区中间角度
+  const midAngle = -90 + i * anglePer;
+  const rotate = midAngle + 90; // 文字沿径向（从中心向外）
+
+  // 文字位置
+  const textR = 58;
+  const tx = textR * Math.cos(midAngle * Math.PI / 180);
+  const ty = textR * Math.sin(midAngle * Math.PI / 180);
+
+  // 花卉线稿位置
+  const flowerR = 76;
+  const fx = flowerR * Math.cos(midAngle * Math.PI / 180);
+  const fy = flowerR * Math.sin(midAngle * Math.PI / 180);
+
+  // 文字组：平移到目标点 + 旋转
+  svgContent += `<g transform="translate(${tx} ${ty}) rotate(${rotate})">
+    <text x="0" y="0" text-anchor="middle" font-family="Noto Serif SC, serif" font-size="5.2" fill="${textColor}" letter-spacing="0.5">${item.flower}</text>
+    <text x="0" y="8" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="3.8" fill="${subColor}" letter-spacing="1">${item.monthCn}</text>
+  </g>`;
+
+  // 花卉线稿组
+  svgContent += `<g transform="translate(${fx} ${fy}) rotate(${rotate})">
+    ${flowerSvg(item.flower.split('+')[0].trim(), 0, -4, 16)}
+  </g>`;
+}
+
+// 装饰性分割线
+for (let i = 0; i < monthCount; i++) {
+  const angle = -90 + i * anglePer - anglePer / 2;
+  const x1 = 18 * Math.cos(angle * Math.PI / 180);
+  const y1 = 18 * Math.sin(angle * Math.PI / 180);
+  const x2 = 88 * Math.cos(angle * Math.PI / 180);
+  const y2 = 88 * Math.sin(angle * Math.PI / 180);
+  svgContent += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(201,169,110,0.08)" stroke-width="0.3"/>`;
+}
+
+wheelSvg.innerHTML = svgContent;
+
+// ============ 轮盘交互 ============
+wheel = document.getElementById('wheel');
+wheelWrapper = document.getElementById('wheelWrapper');
+centerMonth = document.getElementById('centerMonth');
+centerSeason = document.getElementById('centerSeason');
+centerFlower = document.getElementById('centerFlower');
+prevBtn = document.getElementById('prevBtn');
+nextBtn = document.getElementById('nextBtn');
+
+let currentIndex = 5; // 默认六月
+let currentAngle = 0;
+let isDragging = false;
+let startAngle = 0;
+let startRotation = 0;
+let velocity = 0;
+let lastAngle = 0;
+let lastTime = 0;
+let momentumId = null;
+
+// 初始位置：六月在顶部
+currentAngle = -currentIndex * anglePer;
+wheel.style.transform = `rotate(${currentAngle}deg)`;
+updateCenter(currentIndex);
+
+function getAngle(clientX, clientY) {
+  const rect = wheelWrapper.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  return Math.atan2(clientY - cy, clientX - cx) * 180 / Math.PI;
+}
+
+function startDrag(e) {
+  isDragging = true;
+  wheel.classList.add('grabbing');
+  wheel.classList.remove('settling');
+  const point = e.touches ? e.touches[0] : e;
+  startAngle = getAngle(point.clientX, point.clientY);
+  startRotation = currentAngle;
+  velocity = 0;
+  lastAngle = startAngle;
+  lastTime = Date.now();
+  if (momentumId) { cancelAnimationFrame(momentumId); momentumId = null; }
+}
+
+function onDrag(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+  const point = e.touches ? e.touches[0] : e;
+  const angle = getAngle(point.clientX, point.clientY);
+  let delta = angle - startAngle;
+  currentAngle = startRotation + delta;
+  wheel.style.transform = `rotate(${currentAngle}deg)`;
+
+  const now = Date.now();
+  const dt = now - lastTime;
+  if (dt > 0) {
+    velocity = (angle - lastAngle) / dt * 16;
+  }
+  lastAngle = angle;
+  lastTime = now;
+
+  updateCenterByAngle(currentAngle);
+}
+
+function endDrag() {
+  if (!isDragging) return;
+  isDragging = false;
+  wheel.classList.remove('grabbing');
+  // 惯性 + 吸附到最近的月份
+  momentum();
+}
+
+function momentum() {
+  let vel = velocity;
+  function step() {
+    if (Math.abs(vel) < 0.05) {
+      settleToNearest();
+      return;
+    }
+    currentAngle += vel;
+    vel *= 0.95;
+    wheel.style.transform = `rotate(${currentAngle}deg)`;
+    updateCenterByAngle(currentAngle);
+    momentumId = requestAnimationFrame(step);
+  }
+  momentumId = requestAnimationFrame(step);
+}
+
+function settleToNearest() {
+  const normalized = ((currentAngle % 360) + 360) % 360;
+  // 顶部是-90度，找到最接近顶部的扇区索引
+  let nearestIndex = 0;
+  let minDiff = Infinity;
+  for (let i = 0; i < monthCount; i++) {
+    const target = (360 - i * anglePer) % 360;
+    let diff = Math.abs(normalized - target);
+    if (diff > 180) diff = 360 - diff;
+    if (diff < minDiff) { minDiff = diff; nearestIndex = i; }
+  }
+
+  wheel.classList.add('settling');
+  const targetAngle = -nearestIndex * anglePer;
+  // 找最近的旋转路径
+  let finalAngle = currentAngle;
+  const diff = ((targetAngle - finalAngle) % 360 + 540) % 360 - 180;
+  finalAngle += diff;
+  currentAngle = finalAngle;
+  wheel.style.transform = `rotate(${finalAngle}deg)`;
+
+  if (nearestIndex !== currentIndex) {
+    currentIndex = nearestIndex;
+    setTimeout(() => {
+      updateCenter(currentIndex);
+      renderDetail(currentIndex);
+    }, 300);
+  } else {
+    updateCenter(currentIndex);
+  }
+}
+
+function updateCenterByAngle(angle) {
+  const normalized = ((angle % 360) + 360) % 360;
+  let nearestIndex = 0;
+  let minDiff = Infinity;
+  for (let i = 0; i < monthCount; i++) {
+    const target = (360 - i * anglePer) % 360;
+    let diff = Math.abs(normalized - target);
+    if (diff > 180) diff = 360 - diff;
+    if (diff < minDiff) { minDiff = diff; nearestIndex = i; }
+  }
+  if (nearestIndex !== currentIndex) {
+    currentIndex = nearestIndex;
+    updateCenter(currentIndex);
+  }
+}
+
+function updateCenter(index) {
+  const item = FLOWER_DATA[index];
+  centerMonth.textContent = item.month;
+  centerSeason.textContent = item.season;
+  centerFlower.textContent = item.flower;
+}
+
+// 上一月/下一月按钮
+function goToMonth(index) {
+  if (momentumId) { cancelAnimationFrame(momentumId); momentumId = null; }
+  currentIndex = ((index % 12) + 12) % 12;
+  wheel.classList.add('settling');
+  const targetAngle = -currentIndex * anglePer;
+  let finalAngle = currentAngle;
+  const diff = ((targetAngle - finalAngle) % 360 + 540) % 360 - 180;
+  finalAngle += diff;
+  currentAngle = finalAngle;
+  wheel.style.transform = `rotate(${finalAngle}deg)`;
+  updateCenter(currentIndex);
+  setTimeout(() => renderDetail(currentIndex), 300);
+}
+
+prevBtn.addEventListener('click', () => goToMonth(currentIndex - 1));
+nextBtn.addEventListener('click', () => goToMonth(currentIndex + 1));
+
+// 鼠标事件
+wheelWrapper.addEventListener('mousedown', startDrag);
+document.addEventListener('mousemove', onDrag);
+document.addEventListener('mouseup', endDrag);
+
+// 触摸事件
+wheelWrapper.addEventListener('touchstart', startDrag, { passive: false });
+document.addEventListener('touchmove', onDrag, { passive: false });
+document.addEventListener('touchend', endDrag);
+
+// ============ 渲染详情 ============
+detailPanel = document.getElementById('detailPanel');
+detailTag = document.getElementById('detailTag');
+detailName = document.getElementById('detailName');
+detailSub = document.getElementById('detailSub');
+accordion = document.getElementById('accordion');
+
+// 初始渲染详情（延迟确保所有DOM引用就绪）
+setTimeout(() => {
+  renderDetail(currentIndex);
+}, 0);
+
+function renderDetail(index) {
+  const item = FLOWER_DATA[index];
+  const quarter = QUARTER_THEME[item.quarter];
+
+  detailTag.style.display = 'inline-block';
+  detailTag.textContent = `${item.monthCn} · ${item.flower} · ${item.season}`;
+  detailName.innerHTML = `${item.product.name} <span class="en">${item.product.en}</span>`;
+  detailSub.textContent = item.product.tagline;
+
+  // 季度主题条
+  let quarterBar = document.getElementById('quarterBar');
+  if (!quarterBar) {
+    quarterBar = document.createElement('div');
+    quarterBar.id = 'quarterBar';
+    quarterBar.className = 'quarter-bar';
+    detailTag.parentElement.appendChild(quarterBar);
+  }
+  quarterBar.innerHTML = `<span class="q-label">第${['一','二','三','四'][item.quarter-1]}季度</span><span class="q-name">${quarter.name}</span><span class="q-sub">${quarter.subtitle}</span>`;
+
+  // 设计主旨标签
+  let aimTag = document.getElementById('aimTag');
+  if (!aimTag) {
+    aimTag = document.createElement('div');
+    aimTag.id = 'aimTag';
+    aimTag.className = 'aim-tag';
+    detailSub.parentElement.appendChild(aimTag);
+  }
+  aimTag.textContent = item.designAim;
+
+  // 七段手风琴
+  accordion.innerHTML = item.product.sections.map((sec, i) => {
+    let bodyContent = '';
+    if (sec.tasting) {
+      bodyContent = `<div class="tasting-stages">
+        ${sec.tasting.map(t => `
+          <div class="tasting-stage">
+            <div class="stage-dot ${t.cls}"></div>
+            <div>
+              <div class="stage-label">${t.stage}</div>
+              <div class="stage-desc">${t.desc}</div>
             </div>
-            <div id="leaderboard-list"></div>
-        </div>
+          </div>
+        `).join('')}
+      </div>`;
+    } else if (sec.effects) {
+      bodyContent = `<div class="effect-tags">
+        ${sec.effects.map(e => `<span class="effect-tag">${e}</span>`).join('')}
+      </div>`;
+      if (sec.content && sec.content.length) {
+        bodyContent += '<div style="margin-top:14px;">' + sec.content.map(p => `<p>${p}</p>`).join('') + '</div>';
+      }
+    } else if (sec.ingredients) {
+      bodyContent = `<div class="ingredient-list">
+        ${sec.ingredients.map(ing => `<div class="ing-item"><span class="ing-name">${ing.name}</span><span class="ing-role">${ing.role}</span></div>`).join('')}
+      </div>`;
+      if (sec.content && sec.content.length) {
+        bodyContent += '<div style="margin-top:14px;">' + sec.content.map(p => `<p>${p}</p>`).join('') + '</div>';
+      }
+    } else {
+      bodyContent = (sec.content || []).map(p => `<p>${p}</p>`).join('');
+    }
 
-        <!-- 交互控件组 -->
-        <div id="controls-group">
-            <button id="btn-reset-view" title="回归中心">⌖</button>
-            <button id="btn-panorama" title="众生全景">🌐</button>
-            <button id="btn-share" title="全球灵魂数">📤</button>
-            <button id="btn-archive" title="生成星际档案" class="hidden">🗃</button>
+    const numStr = (i + 1).toString().padStart(2, '0');
+    return `
+      <div class="acc-item ${i === 0 ? 'open' : ''}">
+        <div class="acc-head" onclick="toggleAcc(this)">
+          <div class="acc-head-left">
+            <span class="acc-num">${numStr}</span>
+            <span class="acc-title">${sec.title}</span>
+          </div>
+          <div class="acc-arrow"></div>
         </div>
-
-        <!-- 星球悬停提示 -->
-        <div id="planet-tooltip"></div>
-
-        <div id="resonance-toast" class="resonance-toast">
-            <span class="resonance-text"></span>
+        <div class="acc-body" style="${i === 0 ? 'max-height:800px' : ''}">
+          <div class="acc-body-inner">${bodyContent}</div>
         </div>
+      </div>
+    `;
+  }).join('');
 
-        <!-- 分享卡片 2.0 遮罩层 -->
-        <div id="share-overlay" class="hidden">
-            <div id="share-image-container"></div>
-            <div class="share-card" id="share-card-dom">
-                <div class="share-header">✨ 终点之后</div>
-                <div class="share-content">
-                    <p id="share-text">你是全球第 <span id="share-n">0</span> 位在这里留下信号的人。</p>
-                </div>
-                <div class="share-footer">
-                    <div class="share-hint">长按屏幕保存这张记忆</div>
-                </div>
-            </div>
-            <button id="close-share">×</button>
-        </div>
+  // 延迟计算展开高度
+  setTimeout(() => {
+    document.querySelectorAll('.acc-item.open .acc-body').forEach(body => {
+      const inner = body.querySelector('.acc-body-inner');
+      body.style.maxHeight = inner.scrollHeight + 30 + 'px';
+    });
+  }, 50);
+}
+
+function toggleAcc(el) {
+  const item = el.parentElement;
+  const body = item.querySelector('.acc-body');
+  const inner = item.querySelector('.acc-body-inner');
+  if (item.classList.contains('open')) {
+    body.style.maxHeight = '0';
+    item.classList.remove('open');
+  } else {
+    body.style.maxHeight = inner.scrollHeight + 30 + 'px';
+    item.classList.add('open');
+  }
+}
+
+// 窗口大小变化时重新计算展开高度
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.acc-item.open .acc-body').forEach(body => {
+    const inner = body.querySelector('.acc-body-inner');
+    body.style.maxHeight = inner.scrollHeight + 30 + 'px';
+  });
+});
+
+</script>
+<!-- AI 香道顾问 -->
+<button class="ai-chat-btn" id="aiChatBtn" aria-label="AI 香道顾问">
+  <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+</button>
+<div class="ai-chat-panel" id="aiChatPanel">
+  <div class="ai-chat-header">
+    <h4>AI 香道顾问</h4>
+    <span class="ai-model-label" id="aiModelLabel">通义千问 3.7 Plus</span>
+    <button class="ai-chat-close" id="aiChatClose">&times;</button>
+  </div>
+  <div class="ai-chat-messages" id="aiChatMessages">
+    <div class="msg ai welcome-msg">
+      你好，我是你的<strong> AI 香道顾问</strong>。<br><br>
+      我会从十二花神合香珠中为你推荐最合适的款式。<br><br>
+      <div class="quick-questions" id="quickQuestions">
+        <span class="quick-q" data-q="最近压力大，哪款合香珠适合安神助眠？">最近压力大，哪款适合安神助眠？</span>
+        <span class="quick-q" data-q="夏季闷热，有什么清凉解暑的合香珠推荐？">夏季闷热，有什么清凉香推荐？</span>
+        <span class="quick-q" data-q="想送给长辈，哪款合香珠最适合作为礼物？">想送给长辈，哪款最适合？</span>
+        <span class="quick-q" data-q="我是敏感体质，能佩戴合香珠吗？有没有温和不刺激的推荐？">我是敏感体质，能戴吗？</span>
+        <span class="quick-q" data-q="合香珠每天佩戴需要注意什么？如何保养？">每天佩戴需要注意什么？</span>
+      </div>
     </div>
-
-
-    <!-- ═══════════════════════════════════════════════
-         海报模板（脱离文档流，仅用于 html-to-image 截图）
-         ═══════════════════════════════════════════════ -->
-    <div id="poster-tpl" aria-hidden="true">
-        <!-- 胶片噪点叠层 -->
-        <div class="ptpl-noise" aria-hidden="true"></div>
-
-        <div class="ptpl-header">✦ &nbsp;星际档案 &nbsp;·&nbsp; STELLAR ARCHIVE &nbsp;✦</div>
-        <div class="ptpl-divider"></div>
-
-        <div class="ptpl-coords" id="ptpl-coords">Sector: ε7A &nbsp;|&nbsp; Index: 1402</div>
-
-        <div class="ptpl-word-wrap">
-            <div class="ptpl-word" id="ptpl-word">遗言</div>
-        </div>
-
-        <div class="ptpl-quote" id="ptpl-quote">在 10 亿光年外，有人与你感同身受</div>
-
-        <div class="ptpl-cta" id="ptpl-cta">你的两字遗言是什么？</div>
-
-        <div class="ptpl-divider ptpl-divider--bottom"></div>
-        <div class="ptpl-footer">
-            <div class="ptpl-qr" id="ptpl-qr"></div>
-            <div class="ptpl-footer-right">
-                <div class="ptpl-brand">AfterTheEnd &nbsp;·&nbsp; 终点之后</div>
-                <div class="ptpl-domain">end-dmpxo.art</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════
-         全屏预览遮罩层
-         ═══════════════════════════════════════════════ -->
-    <div id="poster-preview" class="hidden">
-        <!-- Loading 状态 -->
-        <div id="poster-loading" class="hidden">
-            <div class="poster-loading-ring"></div>
-            <div class="poster-loading-text">正在生成星际档案…</div>
-        </div>
-        <!-- 图片预览 -->
-        <div class="poster-preview-body" id="poster-preview-body">
-            <img id="poster-preview-img" src="" alt="星际档案" />
-
-            <!-- 主操作区：保存 + 分享 -->
-            <div class="poster-actions">
-                <button id="btn-save-poster" class="btn-save-primary">保存图片</button>
-                <div class="quick-share-group">
-                    <button onclick="shareToSocial('xhs')" class="btn-share-xhs">去小红书发布</button>
-                    <button onclick="shareToSocial('wechat')" class="btn-share-vx">去微信分享</button>
-                </div>
-            </div>
-
-            <button id="poster-preview-close">返回星海</button>
-        </div>
-    </div>
-
-    <!-- 视觉滤镜资源 -->
-    <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true" focusable="false">
-        <defs>
-            <filter id="chromatic-aberration">
-                <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="red" />
-                <feOffset in="red" dx="1.5" dy="0" result="red-offset" />
-                <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="green" />
-                <feOffset in="green" dx="-0.8" dy="0" result="green-offset" />
-                <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="blue" />
-                <feBlend in="red-offset" in2="green-offset" mode="screen" result="rg" />
-                <feBlend in="rg" in2="blue" mode="screen" />
-            </filter>
-            <!-- 噪点滤镜：增强海报质感 -->
-            <filter id="film-grain">
-                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
-                <feColorMatrix type="saturate" values="0" />
-                <feComponentTransfer>
-                    <feFuncR type="linear" slope="0.1" />
-                    <feFuncG type="linear" slope="0.1" />
-                    <feFuncB type="linear" slope="0.1" />
-                </feComponentTransfer>
-            </filter>
-        </defs>
-    </svg>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="script.js?v=2.7"></script>
+  </div>
+  <div class="ai-chat-input-area">
+    <textarea class="ai-chat-input" id="aiChatInput" placeholder="请告诉我你的需求..." rows="1"></textarea>
+    <button class="ai-chat-send" id="aiChatSend">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="ai-chat-settings">
+    <details>
+      <summary>模型选择</summary>
+      <div>
+        <div>免费模型：<select id="aiModelSelect">
+        </select></div>
+      </div>
+    </details>
+  </div>
+</div>
+<script src="rag_chunks.js"></script>
+<script src="ai_chat.js"></script>
 </body>
-
 </html>
