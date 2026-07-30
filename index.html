@@ -2,11 +2,12 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>十二花神 · 逐月寻香 | 思愈界</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="brand-framework.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -49,7 +50,7 @@
     @keyframes hero-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
     /* ====== 轮盘区域 ====== */
-    .wheel-section{padding:20px 0 40px;position:relative}
+    .wheel-section{padding:20px 0 40px;position:relative;overflow-x:clip}
     .wheel-wrapper{
       position:relative;width:min(520px,92vw);height:min(520px,92vw);
       margin:0 auto;
@@ -307,6 +308,13 @@
 </head>
 <body>
 <div class="particles-container" id="particles"></div>
+<header class="brand-frame">
+  <div class="brand-frame__inner">
+    <a class="brand-frame__home" href="https://siyujie.fun">思<span>愈</span>界</a>
+    <span class="brand-frame__series">十二花神</span>
+    <a class="brand-frame__advisor" href="https://siyujie.fun/advisor/?from=%E5%8D%81%E4%BA%8C%E8%8A%B1%E7%A5%9E&amp;return=https%3A%2F%2Fend-dmpxo.art">AI 选香</a>
+  </div>
+</header>
 
 <!-- HERO -->
 <section class="hero">
@@ -356,6 +364,15 @@
       </div>
     </div>
   </div>
+</section>
+
+<section class="advisor-module" aria-labelledby="advisor-title">
+  <div>
+    <p class="advisor-module__eyebrow">AI SCENT GUIDE</p>
+    <h2 class="advisor-module__title" id="advisor-title">想按当月、送礼心意或此刻心境，挑一位花神？</h2>
+    <p class="advisor-module__copy">AI 会先问几个简单问题，再从十二花神与其他系列中帮你确认更适合从哪一款开始。</p>
+  </div>
+  <a class="advisor-module__action" href="https://siyujie.fun/advisor/?from=%E5%8D%81%E4%BA%8C%E8%8A%B1%E7%A5%9E&amp;focus=%E5%BD%93%E6%9C%88%E3%80%81%E9%80%81%E7%A4%BC%E6%88%96%E5%BF%83%E5%A2%83&amp;return=https%3A%2F%2Fend-dmpxo.art">开始 AI 选香</a>
 </section>
 
 <p class="footer">思愈界 · 祝福妙香珠 | 慈莲如意</p>
@@ -1805,11 +1822,11 @@ window.addEventListener('resize', () => {
 
 <nav class="nav-bar">
   <div class="nav-links">
-    <a href="http://siyujie.fun" class="nav-link"><span class="nav-icon">🏠</span><span>首页</span></a>
-    <a href="https://siyujie.online" class="nav-link"><span class="nav-icon">🌀</span><span>五行经典</span></a>
-    <a href="https://siyujie.xyz" class="nav-link"><span class="nav-icon">🌸</span><span>四季果香</span></a>
-    <a href="https://siyujie.shop" class="nav-link"><span class="nav-icon">☯️</span><span>道系灵山</span></a>
-    <a href="https://end-dmpxo.art" class="nav-link active"><span class="nav-icon">🌺</span><span>十二花神</span></a>
+    <a href="https://siyujie.fun" class="nav-link"><span>首页</span></a>
+    <a href="https://siyujie.online" class="nav-link"><span>五行经典</span></a>
+    <a href="https://siyujie.xyz" class="nav-link"><span>四季果香</span></a>
+    <a href="https://siyujie.shop" class="nav-link"><span>道系灵山</span></a>
+    <a href="https://end-dmpxo.art" class="nav-link active"><span>十二花神</span></a>
   </div>
 </nav>
 </body>
