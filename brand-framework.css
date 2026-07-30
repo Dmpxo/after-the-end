@@ -1,0 +1,196 @@
+:root {
+  --brand-paper: #f4f0e8;
+  --brand-pine: #22352a;
+  --brand-vermilion: #8d3930;
+}
+
+.brand-frame {
+  position: relative;
+  z-index: 80;
+  border-bottom: 1px solid var(--border-subtle, rgba(201, 169, 110, .18));
+  background: rgba(16, 14, 11, .86);
+  backdrop-filter: blur(16px);
+}
+
+.brand-frame__inner {
+  width: min(100% - 40px, 1120px);
+  min-height: 64px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.brand-frame__home,
+.brand-frame__advisor {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  text-decoration: none;
+  font-family: "Noto Serif SC", serif;
+  letter-spacing: .08em;
+}
+
+.brand-frame__home {
+  color: var(--text-primary, #f0ebe3);
+  font-size: .9rem;
+}
+
+.brand-frame__home span {
+  color: var(--accent-gold, #c9a96e);
+}
+
+.brand-frame__series {
+  color: var(--text-muted, #8a8078);
+  font-family: "Noto Sans SC", sans-serif;
+  font-size: .72rem;
+  letter-spacing: .2em;
+}
+
+.brand-frame__advisor {
+  border: 1px solid rgba(201, 169, 110, .46);
+  color: var(--accent-gold, #c9a96e);
+  padding: 8px 14px;
+  font-family: "Noto Sans SC", sans-serif;
+  font-size: .75rem;
+  letter-spacing: .12em;
+  transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+
+.brand-frame__advisor:hover {
+  background: var(--accent-gold, #c9a96e);
+  color: var(--bg-deep, #1a1612);
+  transform: translateY(-1px);
+}
+
+.brand-frame__home:focus-visible,
+.brand-frame__advisor:focus-visible,
+.advisor-module__action:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid #f3dfb6;
+  outline-offset: 3px;
+}
+
+.advisor-module {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px;
+  border-top: 1px solid rgba(201, 169, 110, .48);
+  border-bottom: 1px solid rgba(201, 169, 110, .48);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 28px;
+  align-items: end;
+}
+
+.advisor-module__eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-gold, #c9a96e);
+  font-family: "Noto Sans SC", sans-serif;
+  font-size: .68rem;
+  font-weight: 500;
+  letter-spacing: .2em;
+}
+
+.advisor-module__title {
+  margin: 0;
+  color: var(--text-primary, #f0ebe3);
+  font-family: "Noto Serif SC", serif;
+  font-size: clamp(1.25rem, 3vw, 1.7rem);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.advisor-module__copy {
+  max-width: 500px;
+  margin: 10px 0 0;
+  color: var(--text-muted, #8a8078);
+  font-size: .84rem;
+  line-height: 1.8;
+}
+
+.advisor-module__action {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent-gold, #c9a96e);
+  padding: 10px 16px;
+  color: var(--bg-deep, #1a1612);
+  background: var(--accent-gold, #c9a96e);
+  text-decoration: none;
+  font-family: "Noto Sans SC", sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  white-space: nowrap;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.advisor-module__action:hover {
+  background: #ead6ae;
+  transform: translateY(-1px);
+}
+
+.nav-icon {
+  display: none;
+}
+
+.nav-bar {
+  padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+}
+
+.nav-links {
+  gap: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+.nav-link {
+  min-width: 0;
+  flex: 1 1 0;
+  min-height: 40px;
+  justify-content: center;
+  letter-spacing: .04em;
+}
+
+@media (max-width: 680px) {
+  .brand-frame__inner {
+    width: min(100% - 32px, 1120px);
+    min-height: 58px;
+  }
+
+  .brand-frame__series {
+    display: none;
+  }
+
+  .brand-frame__advisor {
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: .7rem;
+  }
+
+  .advisor-module {
+    margin: 0 18px;
+    padding: 24px 0;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .advisor-module__action {
+    width: 100%;
+  }
+
+  .nav-link {
+    font-size: .7rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-frame__advisor,
+  .advisor-module__action {
+    transition: none;
+  }
+}
